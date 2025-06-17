@@ -1,0 +1,11 @@
+{
+  "name": "Story Ripple",
+  "description": "Control the narrative of every story",
+  "author": "0xc300F4FD1FCE5B68f087dA2318a99a4EcfCd7A75",
+  "version": "0.1.0",
+  "iconUrl": "/assets/icon.png",
+  "previewImageUrl": "/assets/preview-1200x800.png",
+  "splashImageUrl": "/assets/splash-200x200.png",
+  "splashBackgroundColor": "#1f1334f",
+  "homeUrl": "https://your-deployed-url.com"
+} 
