@@ -1,3 +1,6 @@
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faUser, faThumbsUp, faWater } from '@fortawesome/free-solid-svg-icons';
+
 interface RippleCardProps {
   text: string;
   author: string;
@@ -11,7 +14,7 @@ export function RippleCard({ text, author, originalAuthor, votes, avatar }: Ripp
     <div className="card-gradient rounded-2xl p-4 mb-3">
       <div className="flex items-start space-x-3">
         <div className="w-10 h-10 bg-purple-500 rounded-full flex-shrink-0 flex items-center justify-center">
-          <span className="text-white text-sm">👤</span>
+          <FontAwesomeIcon icon={faUser} size="sm" className="text-white" />
         </div>
         <div className="flex-1">
           <div className="flex items-center space-x-2 mb-2">
@@ -23,11 +26,11 @@ export function RippleCard({ text, author, originalAuthor, votes, avatar }: Ripp
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
               <button className="flex items-center space-x-1 text-gray-400 hover:text-purple-400">
-                <span>👍</span>
+                <FontAwesomeIcon icon={faThumbsUp} />
                 <span className="text-sm">{votes}</span>
               </button>
               <button className="text-gray-400 hover:text-blue-400">
-                <span>🌊</span>
+                <FontAwesomeIcon icon={faWater} />
               </button>
             </div>
             <button className="text-purple-400 text-sm hover:text-purple-300">
