@@ -43,19 +43,22 @@ export function BottomNavigation() {
   ];
 
   return (
-    <div className="fixed bottom-2 left-1/2 transform -translate-x-1/2 w-full z-50 md:bottom-0 md:left-auto md:right-0 md:translate-x-0 md:w-[400px] md:rounded-l-3xl md:rounded-r-none md:top-0 md:h-screen md:flex md:items-end md:justify-end">
-      <div className="bg-gradient-to-b from-[#453c5c] to-[#2a1d3a] rounded-full px-4 py-2 shadow-2xl w-[95vw] max-w-xs mx-auto flex items-center justify-between md:mx-0 md:my-8 md:w-[80px] md:flex-col md:rounded-3xl md:py-8 md:px-2">
+    <div className="fixed bottom-0 left-0 w-full z-[100] md:bottom-0 md:left-auto md:right-0 md:translate-x-0 md:w-[400px] md:rounded-l-3xl md:rounded-r-none md:top-0 md:h-screen md:flex md:items-end md:justify-end pointer-events-none">
+      <div className="bg-gradient-to-b from-[#453c5c] to-[#2a1d3a] rounded-t-2xl rounded-b-none px-4 py-2 shadow-2xl w-full max-w-xs mx-auto flex items-center justify-between md:mx-0 md:my-8 md:w-[80px] md:flex-col md:rounded-3xl md:py-8 md:px-2 pointer-events-auto">
         {navItems.map(({ icon, path, isCenter }, index) => {
           const isActive = pathname === path;
           return (
             <button
               key={path}
               onClick={() => router.push(path)}
-              className={`flex items-center justify-center transition-all duration-200 ${
+              className={`flex items-center justify-center transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-purple-400 ${
                 isCenter 
-                  ? 'w-14 h-14 bg-[#6b46c1] rounded-xl' 
-                  : 'w-10 h-10 hover:scale-110'
+                  ? 'w-16 h-16 bg-[#6b46c1] rounded-xl' 
+                  : 'w-14 h-14 hover:scale-110'
               }`}
+              style={{ touchAction: 'manipulation' }}
+              tabIndex={0}
+              aria-label={path.replace('/', '') || 'home'}
             >
               {icon}
             </button>
