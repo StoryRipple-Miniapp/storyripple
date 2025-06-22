@@ -3,13 +3,15 @@
 import { Header } from '@/components/Header';
 import { StoryCard } from '@/components/StoryCard';
 import { RippleCard } from '@/components/RippleCard';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faUsers, faFire, faWater, faStar, faChevronRight, faCrown } from '@fortawesome/free-solid-svg-icons';
 
 export default function FeedsPage() {
   const featuredCreators = [
-    { name: 'Alice', avatar: '/avatars/1.jpg' },
-    { name: 'Bob', avatar: '/avatars/2.jpg' },
-    { name: 'Carol', avatar: '/avatars/3.jpg' },
-    { name: 'Dave', avatar: '/avatars/4.jpg' },
+    { name: 'Alice', avatar: '/avatars/1.jpg', badge: '🔥', level: 'Elite' },
+    { name: 'Bob', avatar: '/avatars/2.jpg', badge: '⭐', level: 'Pro' },
+    { name: 'Carol', avatar: '/avatars/3.jpg', badge: '💎', level: 'Legend' },
+    { name: 'Dave', avatar: '/avatars/4.jpg', badge: '🚀', level: 'Rising' },
   ];
 
   const trendingStories = [
@@ -64,28 +66,68 @@ export default function FeedsPage() {
 
   return (
     <div className="min-h-screen">
-      <Header title="Feeds" showWallet walletBalance="0" />
+      <Header />
       
-      <div className="px-6">
+      <div className="px-6 space-y-10 animate-fade-in">
         {/* Featured Creators */}
-        <section className="mb-6">
-          <h2 className="text-lg font-semibold text-white mb-4">Featured Creators</h2>
-          <div className="flex space-x-4">
+        <section className="animate-slide-up">
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center space-x-4">
+              <div className="featured-card w-12 h-12 flex items-center justify-center">
+                <FontAwesomeIcon icon={faCrown} size="sm" className="text-primary" />
+              </div>
+              <div>
+                <h2 className="text-2xl font-display font-bold text-primary">Featured Creators</h2>
+                <p className="text-secondary text-sm">Top storytellers this week</p>
+              </div>
+            </div>
+            <button className="flex items-center space-x-2 text-accent hover:text-accent-secondary transition-colors btn-secondary py-2 px-4">
+              <span className="text-sm font-medium font-display">See All</span>
+              <FontAwesomeIcon icon={faChevronRight} size="xs" />
+            </button>
+          </div>
+          
+          <div className="flex space-x-4 overflow-x-auto pb-2">
             {featuredCreators.map((creator, index) => (
-              <div key={index} className="flex flex-col items-center">
-                <div className="w-16 h-16 bg-gradient-to-br from-purple-500 to-blue-500 rounded-full mb-2 flex items-center justify-center">
-                  <span className="text-white text-xl">👤</span>
+              <div key={index} className="flex-shrink-0 nft-card p-5 min-w-[100px] group cursor-pointer">
+                <div className="flex flex-col items-center space-y-3">
+                  <div className="relative">
+                    <div className="featured-card w-16 h-16 flex items-center justify-center">
+                      <FontAwesomeIcon icon={faUsers} className="text-primary text-xl" />
+                    </div>
+                    <div className="absolute -top-1 -right-1 text-lg animate-bounce-subtle">
+                      {creator.badge}
+                    </div>
+                  </div>
+                  <div className="text-center">
+                    <span className="text-sm font-semibold text-primary block">{creator.name}</span>
+                    <span className="text-xs text-muted font-medium">{creator.level}</span>
+                  </div>
                 </div>
-                <span className="text-xs text-gray-400">{creator.name}</span>
               </div>
             ))}
           </div>
         </section>
 
         {/* Trending Stories */}
-        <section className="mb-6">
-          <h2 className="text-lg font-semibold text-white mb-4">TRENDING STORIES</h2>
-          <div className="grid grid-cols-2 gap-3">
+        <section className="animate-slide-up" style={{animationDelay: '0.1s'}}>
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center space-x-4">
+              <div className="featured-card w-12 h-12 flex items-center justify-center animate-glow">
+                <FontAwesomeIcon icon={faFire} size="sm" className="text-primary" />
+              </div>
+              <div>
+                <h2 className="text-2xl font-display font-bold text-gradient">Trending Stories</h2>
+                <p className="text-secondary text-sm">Hot stories gaining traction</p>
+              </div>
+            </div>
+            <button className="flex items-center space-x-2 text-accent hover:text-accent-secondary transition-colors btn-secondary py-2 px-4">
+              <span className="text-sm font-medium font-display">View All</span>
+              <FontAwesomeIcon icon={faChevronRight} size="xs" />
+            </button>
+          </div>
+          
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
             {trendingStories.map((story, index) => (
               <StoryCard key={index} {...story} />
             ))}
@@ -93,22 +135,32 @@ export default function FeedsPage() {
         </section>
 
         {/* Ripples */}
-        <section>
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="text-lg font-semibold text-white">RIPPLES</h2>
-            <div className="flex items-center space-x-2">
-              <span className="text-purple-400 text-sm">Trending</span>
-              <div className="w-6 h-6 bg-purple-500 rounded-full flex items-center justify-center">
-                <span className="text-white text-xs">⚡</span>
+        <section className="animate-slide-up" style={{animationDelay: '0.2s'}}>
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center space-x-4">
+              <div className="featured-card w-12 h-12 flex items-center justify-center">
+                <FontAwesomeIcon icon={faWater} size="sm" className="text-primary" />
+              </div>
+              <div>
+                <h2 className="text-2xl font-display font-bold text-primary">Latest Ripples</h2>
+                <p className="text-secondary text-sm">Fresh story continuations</p>
               </div>
             </div>
+            <div className="flex items-center space-x-2 achievement-badge">
+              <FontAwesomeIcon icon={faStar} size="xs" className="text-warning" />
+              <span className="text-warning text-sm font-semibold">Trending</span>
+            </div>
           </div>
-          <div>
+          
+          <div className="space-y-4">
             {ripples.map((ripple, index) => (
               <RippleCard key={index} {...ripple} />
             ))}
           </div>
         </section>
+
+        {/* Bottom Spacer */}
+        <div className="h-8"></div>
       </div>
     </div>
   );

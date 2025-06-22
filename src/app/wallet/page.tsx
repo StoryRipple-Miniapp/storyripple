@@ -2,65 +2,163 @@
 
 import { Header } from '@/components/Header';
 import { useState } from 'react';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faLightbulb, faEye, faEyeSlash, faCopy, faSpinner } from '@fortawesome/free-solid-svg-icons';
 
 export default function WalletPage() {
   const [walletCreated, setWalletCreated] = useState(false);
-  const walletAddress = "0xd8dA6B...3f";
+  const [termsAccepted, setTermsAccepted] = useState(false);
+  const [isCreatingWallet, setIsCreatingWallet] = useState(false);
+  const [showFullAddress, setShowFullAddress] = useState(false);
+  const [copySuccess, setCopySuccess] = useState(false);
+  
+  const fullWalletAddress = "0xffjhllAbCd1234567890EfGh2fa";
+  const shortWalletAddress = "0xffjhll....2fa";
+
+  const handleCopyAddress = async () => {
+    try {
+      await navigator.clipboard.writeText(fullWalletAddress);
+      setCopySuccess(true);
+      setTimeout(() => setCopySuccess(false), 2000);
+    } catch (err) {
+      console.error('Failed to copy address:', err);
+    }
+  };
 
   return (
-    <div className="min-h-screen">
-      <Header title="Ripple Wallet" showWallet walletBalance="0" />
+    <div className="min-h-screen font-rounded" style={{ backgroundColor: '#1f1334' }}>
+      {/* Improved galaxy/starfield background */}
+      <div className="pointer-events-none absolute inset-0 overflow-hidden">
+        {[...Array(80)].map((_, i) => (
+          <span
+            key={i}
+            className="absolute block bg-white rounded-full"
+            style={{
+              width: `${Math.random() * 2 + 0.5}px`,
+              height: `${Math.random() * 2 + 0.5}px`,
+              top: `${Math.random() * 100}%`,
+              left: `${Math.random() * 100}%`,
+              animation: `twinkle ${Math.random() * 3 + 2}s ease-in-out infinite alternate`,
+              opacity: Math.random() * 0.8 + 0.2,
+            }}
+          />
+        ))}
+      </div>
+
+      <Header />
       
-      <div className="px-6">
-        <div className="text-center mb-8">
-          <div className="text-4xl font-bold text-white mb-2">0 RIPPLES</div>
-          <div className="w-3 h-3 bg-green-400 rounded-full mx-auto"></div>
+      <div className="px-4 py-6 space-y-5 relative z-10 max-w-sm mx-auto max-h-[calc(100vh-160px)] overflow-y-auto scrollbar-hide">
+        {/* Top Right Ripples Display */}
+        <div className="flex justify-end">
+          <div className="inline-flex items-center space-x-2 bg-black/30 backdrop-blur-md border border-[#5646a6]/40 rounded-full px-4 py-2 shadow-lg">
+            <span className="text-white font-semibold text-sm">0 RIPPLES</span>
+            {/* Profile image placeholder - will be replaced with actual profile fetch */}
+            <div className="w-6 h-6 bg-gradient-to-br from-purple-400 to-purple-600 rounded-full flex items-center justify-center border border-purple-300/30">
+              <div className="w-4 h-4 bg-gray-300 rounded-full"></div>
+            </div>
+          </div>
         </div>
 
-        <div className="space-y-6">
-          {/* Wallet Address */}
-          <div className="card-gradient rounded-2xl p-6">
-            <h3 className="text-lg font-semibold text-white mb-4">Wallet Address</h3>
-            <div className="bg-slate-700/50 rounded-lg p-4 border border-slate-600">
-              <span className="text-gray-300 font-mono text-sm">{walletAddress}</span>
-            </div>
-          </div>
-
-          {/* Wallet Balance */}
-          <div className="card-gradient rounded-2xl p-6">
-            <h3 className="text-lg font-semibold text-white mb-4">Wallet Balance</h3>
-            <div className="text-center">
-              <div className="text-3xl font-bold text-white mb-2">$0.00</div>
-              <div className="text-sm text-gray-400">1 RIPPLE = $1.00</div>
-            </div>
-          </div>
-
-          {/* Info Text */}
-          <div className="bg-slate-800/50 rounded-xl p-4 space-y-3">
-            <p className="text-sm text-gray-300 leading-relaxed">
-              🟢 Your <span className="text-purple-400 font-semibold">1 RIPPLE</span> will be deducted for every Story Seed 
-              you create.
-            </p>
-            <p className="text-sm text-gray-300 leading-relaxed">
-              Your <span className="text-purple-400 font-semibold">0.50 RIPPLES</span> will be deducted for every ripple 
-              you create.
-            </p>
-          </div>
-
-          {/* Action Buttons */}
-          <div className="space-y-3">
-            <button 
-              onClick={() => setWalletCreated(true)}
-              className="w-full bg-purple-600 hover:bg-purple-700 text-white font-semibold py-4 rounded-2xl transition-colors"
-            >
-              {walletCreated ? 'Copy Wallet Address' : 'Creating your Wallet'}
-            </button>
+        {/* Wallet Address Card */}
+        <div className="space-y-2">
+          <h3 className="text-white text-sm font-medium font-display">Wallet Address</h3>
+          <div className="bg-black/30 backdrop-blur-md border border-[#5646a6] rounded-lg p-4 relative group shadow-lg">
+            {/* Enhanced glow effect */}
+            <div className="absolute inset-0 bg-gradient-to-r from-[#5646a6]/10 via-[#7c3aed]/20 to-[#5646a6]/10 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+            <div className="absolute inset-0 rounded-lg shadow-[0_0_20px_rgba(86,70,166,0.3)] opacity-60"></div>
             
-            <button className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-4 rounded-2xl transition-colors">
-              Add Funds
-            </button>
+            <div className="flex items-center justify-between relative z-10">
+              <span className="text-white font-mono text-sm">
+                {showFullAddress ? fullWalletAddress : shortWalletAddress}
+              </span>
+              <div className="flex items-center space-x-2">
+                <button 
+                  onClick={() => setShowFullAddress(!showFullAddress)}
+                  className="text-[#5646a6] hover:text-white transition-colors p-1"
+                  title={showFullAddress ? "Hide address" : "Show full address"}
+                >
+                  <FontAwesomeIcon icon={showFullAddress ? faEyeSlash : faEye} size="sm" />
+                </button>
+                <button 
+                  onClick={handleCopyAddress}
+                  className={`${copySuccess ? 'text-[#c0b7d4]' : 'text-[#5646a6]'} hover:text-white transition-colors p-1`}
+                  title={copySuccess ? "Copied!" : "Copy address"}
+                >
+                  <FontAwesomeIcon icon={faCopy} size="sm" />
+                </button>
+              </div>
+            </div>
           </div>
         </div>
+
+        {/* Wallet Balance Card */}
+        <div className="space-y-2">
+          <h3 className="text-white text-sm font-medium font-display">Wallet Balance</h3>
+          <div className="bg-black/30 backdrop-blur-md border border-[#5646a6] rounded-lg p-6 relative group shadow-lg">
+            {/* Enhanced glow effect */}
+            <div className="absolute inset-0 bg-gradient-to-r from-[#5646a6]/10 via-[#7c3aed]/20 to-[#5646a6]/10 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+            <div className="absolute inset-0 rounded-lg shadow-[0_0_20px_rgba(86,70,166,0.3)] opacity-60"></div>
+            
+            <div className="text-center relative z-10">
+              <div className="text-3xl font-bold text-gray-400 mb-1">$0.00</div>
+              <div className="text-xs text-gray-500">1 RIPPLE = $1.00</div>
+            </div>
+          </div>
+        </div>
+
+        {/* Separator Line */}
+        <div className="w-full h-px bg-gradient-to-r from-transparent via-[#5646a6]/50 to-transparent"></div>
+
+        {/* Terms & Conditions */}
+        <div className="space-y-3">
+          <div className="flex items-center space-x-2">
+            <input 
+              type="checkbox" 
+              id="terms" 
+              checked={termsAccepted}
+              onChange={(e) => setTermsAccepted(e.target.checked)}
+              className="w-4 h-4 accent-[#c0b7d4] bg-transparent border-[#5646a6] rounded focus:ring-[#c0b7d4] focus:ring-2"
+            />
+            <label htmlFor="terms" className="text-xs text-gray-400">Terms & Conditions Apply</label>
+          </div>
+          
+          <div className="space-y-1 text-xs text-gray-500 leading-relaxed">
+            <p>
+              Gas Fee of <span className="text-white font-medium">1 RIPPLE</span> will be incurred for every Story Seed
+            </p>
+            <p>
+              Gas Fee of <span className="text-white font-medium">0.50 RIPPLE</span> will be incurred for every Story Ripple
+            </p>
+            <p>
+              Gas Fee of <span className="text-white font-medium">0.25 RIPPLE</span> will be incurred for 1 valid Upvote
+            </p>
+          </div>
+        </div>
+
+        {/* Action Buttons - Now in one line after terms */}
+        <div className="flex space-x-3 pt-2">
+          <button 
+            onClick={() => {
+              setIsCreatingWallet(true);
+              setTimeout(() => setIsCreatingWallet(false), 3000);
+            }}
+            className="flex-1 bg-[#c0b7d4] text-black px-4 py-2 rounded-full font-display font-medium text-xs flex items-center justify-center space-x-2 hover:bg-[#d4cbe0] transition-all whitespace-nowrap"
+          >
+            <FontAwesomeIcon 
+              icon={faSpinner} 
+              className={`${isCreatingWallet ? 'animate-spin' : ''}`} 
+              size="sm" 
+            />
+            <span>Creating Your Wallet</span>
+          </button>
+          
+          <button className="flex-1 bg-black/20 backdrop-blur-md border border-[#3f3379] text-white px-4 py-2 rounded-full font-display font-medium text-xs hover:bg-black/30 transition-all shadow-lg whitespace-nowrap">
+            Add funds
+          </button>
+        </div>
+
+        {/* Bottom padding for navigation clearance */}
+        <div className="h-4"></div>
       </div>
     </div>
   );

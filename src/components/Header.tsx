@@ -1,19 +1,72 @@
-interface HeaderProps {
-  title: string;
-  showWallet?: boolean;
-  walletBalance?: string;
-}
+'use client';
 
-export function Header({ title, showWallet = false, walletBalance = "0" }: HeaderProps) {
+import { usePathname, useRouter } from 'next/navigation';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faWallet, faBookOpenReader } from '@fortawesome/free-solid-svg-icons';
+
+export function Header() {
+  const pathname = usePathname();
+  const router = useRouter();
+  
+  const getPageName = (path: string | null) => {
+    if (!path) return 'Story Ripple';
+    switch (path) {
+      case '/':
+      case '/feeds':
+        return 'Story Ripple';
+      case '/create':
+        return 'Create Story';
+      case '/leaderboard':
+        return 'Leaderboard';
+      case '/rules':
+        return 'Rules';
+      case '/profile':
+        return 'Profile';
+      case '/trending':
+        return 'Trending';
+      case '/wallet':
+        return 'Ripple Wallet';
+      default:
+        return 'Story Ripple';
+    }
+  };
+
   return (
-    <div className="flex justify-between items-center p-6 bg-slate-800/50 backdrop-blur-lg">
-      <h1 className="text-2xl font-bold text-white">{title}</h1>
-      {showWallet && (
-        <div className="flex items-center space-x-2 bg-purple-600/20 px-3 py-2 rounded-full border border-purple-500/30">
-          <span className="text-purple-300 text-sm">{walletBalance} RIPPLES</span>
-          <div className="w-2 h-2 bg-green-400 rounded-full"></div>
+    <div className="fixed top-0 left-0 w-full z-50 header-modern safe-area-top">
+      <div className="flex items-center justify-between px-6 py-4 max-w-sm mx-auto md:max-w-none md:mx-0">
+        {/* Rules icon */}
+        <div className="flex-shrink-0">
+          <button
+            aria-label="Rules"
+            onClick={() => router.push('/rules')}
+            className="nft-card w-11 h-11 flex items-center justify-center group"
+          >
+            <FontAwesomeIcon icon={faBookOpenReader} size="lg" className="text-white" />
+          </button>
         </div>
-      )}
+        
+        {/* Page Name */}
+        <div className="flex-1 text-center px-4">
+          <h1 className="text-primary text-lg font-display font-semibold tracking-tight truncate">
+            {getPageName(pathname)}
+          </h1>
+        </div>
+        
+        {/* Wallet Icon */}
+        <div className="flex-shrink-0">
+          <button 
+            className="nft-card w-11 h-11 flex items-center justify-center group"
+            onClick={() => router.push('/wallet')}
+            aria-label="Open wallet"
+          >
+            <FontAwesomeIcon 
+              icon={faWallet} 
+              size="lg" 
+              className="text-white" 
+            />
+          </button>
+        </div>
+      </div>
     </div>
   );
 } 
