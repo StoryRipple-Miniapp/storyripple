@@ -2,6 +2,8 @@
 
 import { Header } from '@/components/Header';
 import { useState } from 'react';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faPlus, faImage, faPaperPlane } from '@fortawesome/free-solid-svg-icons';
 
 export default function CreatePage() {
   const [storyText, setStoryText] = useState('');
@@ -11,90 +13,152 @@ export default function CreatePage() {
   const categories = ['Fantasy', 'Sci-Fi', 'Mystery', 'Horror', 'Romance', 'Adventure'];
 
   const toggleCategory = (category: string) => {
-    setSelectedCategories(prev => 
-      prev.includes(category) 
+    setSelectedCategories(prev =>
+      prev.includes(category)
         ? prev.filter(c => c !== category)
         : [...prev, category]
     );
   };
 
   return (
-    <div className="min-h-screen">
-      <Header title="Create" showWallet walletBalance="0" />
+    <div className="min-h-screen font-rounded" style={{ backgroundColor: '#1f1334' }}>
+      {/* Improved galaxy/starfield background */}
+      <div className="pointer-events-none absolute inset-0 overflow-hidden">
+        {/* Large twinkling stars */}
+        {[...Array(15)].map((_, i) => (
+          <span
+            key={`large-${i}`}
+            className="absolute block bg-white rounded-full"
+            style={{
+              width: '2px',
+              height: '2px',
+              top: `${Math.random() * 100}%`,
+              left: `${Math.random() * 100}%`,
+              animation: `twinkle ${Math.random() * 4 + 3}s ease-in-out infinite`,
+              animationDelay: `${Math.random() * 2}s`,
+            }}
+          />
+        ))}
+        
+        {/* Medium floating stars */}
+        {[...Array(25)].map((_, i) => (
+          <span
+            key={`medium-${i}`}
+            className="absolute block bg-white rounded-full"
+            style={{
+              width: '1.5px',
+              height: '1.5px',
+              top: `${Math.random() * 100}%`,
+              left: `${Math.random() * 100}%`,
+              animation: `galaxyFloat ${Math.random() * 6 + 4}s ease-in-out infinite`,
+              animationDelay: `${Math.random() * 3}s`,
+              opacity: Math.random() * 0.6 + 0.2,
+            }}
+          />
+        ))}
+        
+        {/* Small pulsing stars */}
+        {[...Array(40)].map((_, i) => (
+          <span
+            key={`small-${i}`}
+            className="absolute block bg-white rounded-full"
+            style={{
+              width: '1px',
+              height: '1px',
+              top: `${Math.random() * 100}%`,
+              left: `${Math.random() * 100}%`,
+              animation: `starPulse ${Math.random() * 5 + 2}s ease-in-out infinite`,
+              animationDelay: `${Math.random() * 4}s`,
+              opacity: Math.random() * 0.4 + 0.1,
+            }}
+          />
+        ))}
+        
+        {/* Tiny distant stars */}
+        {[...Array(60)].map((_, i) => (
+          <span
+            key={`tiny-${i}`}
+            className="absolute block bg-white rounded-full opacity-30"
+            style={{
+              width: '0.5px',
+              height: '0.5px',
+              top: `${Math.random() * 100}%`,
+              left: `${Math.random() * 100}%`,
+              animation: `twinkle ${Math.random() * 8 + 6}s ease-in-out infinite`,
+              animationDelay: `${Math.random() * 5}s`,
+            }}
+          />
+        ))}
+      </div>
       
-      <div className="px-6">
-        {/* Daily Reward Banner */}
-        <div className="bg-gradient-to-r from-purple-600 to-blue-600 rounded-2xl p-4 mb-6 text-center">
-          <div className="text-white font-semibold">Create Story Seed</div>
-          <div className="text-yellow-300 text-sm">🎯 8.00% Daily ripple rewards</div>
-        </div>
-
-        {/* Story Input */}
-        <div className="card-gradient rounded-2xl p-6 mb-6">
+      <Header />
+      
+      <div className="px-4 py-6 space-y-5 relative z-10 max-w-sm mx-auto overflow-y-auto scrollbar-hide">
+        {/* Story Input Card */}
+        <div className="bg-black/30 backdrop-blur-md border border-[#5646a6] rounded-xl p-4 shadow-lg">
+          <h3 className="text-white text-sm font-medium font-display mb-2">Write your story seed</h3>
           <textarea
             value={storyText}
             onChange={(e) => setStoryText(e.target.value)}
-            placeholder="Write your story seed..."
-            className="w-full h-32 bg-transparent border-none outline-none text-white placeholder-gray-400 resize-none"
+            placeholder="In a realm where shadows dance and secrets whisper..."
+            className="w-full h-28 bg-transparent border-none outline-none text-white placeholder-gray-500 resize-none text-sm"
             maxLength={250}
           />
-          <div className="text-right text-gray-400 text-sm mt-2">
+          <div className="text-right text-gray-500 text-xs font-display">
             {storyText.length}/250
           </div>
         </div>
 
-        {/* Upload Thumbnail */}
-        <div className="card-gradient rounded-2xl p-6 mb-6">
-          <div className="text-white font-semibold mb-4">Upload Thumbnail*</div>
-          <div className="border-2 border-dashed border-purple-500/50 rounded-xl p-8 text-center">
-            <div className="w-16 h-16 bg-purple-600/30 rounded-xl mx-auto mb-3 flex items-center justify-center">
-              <span className="text-purple-400 text-2xl">📸</span>
-            </div>
-            <div className="text-gray-400 text-sm">Tap to upload image</div>
-          </div>
+        {/* Upload Thumbnail Card */}
+        <div className="bg-black/30 backdrop-blur-md border border-[#5646a6] rounded-xl p-4 shadow-lg text-center">
+          <FontAwesomeIcon icon={faImage} className="text-purple-400 text-2xl mb-2" />
+          <h3 className="text-white text-sm font-medium font-display mb-1">Upload Thumbnail</h3>
+          <p className="text-xs text-gray-500">Tap to select an image</p>
         </div>
 
-        {/* Story Categories */}
-        <div className="card-gradient rounded-2xl p-6 mb-6">
-          <div className="text-white font-semibold mb-4">Story Categories*</div>
-          <div className="grid grid-cols-2 gap-3">
+        {/* Story Categories Card */}
+        <div className="bg-black/30 backdrop-blur-md border border-[#5646a6] rounded-xl p-4 shadow-lg">
+          <h3 className="text-white text-sm font-medium font-display mb-3">Story Categories</h3>
+          <div className="grid grid-cols-3 gap-2">
             {categories.map((category) => (
               <button
                 key={category}
                 onClick={() => toggleCategory(category)}
-                className={`flex items-center justify-between p-3 rounded-lg border transition-colors ${
+                className={`px-3 py-2 rounded-full font-display font-medium text-xs flex items-center justify-center space-x-2 transition-all ${
                   selectedCategories.includes(category)
-                    ? 'bg-purple-600/30 border-purple-500 text-white'
-                    : 'bg-slate-700/50 border-slate-600 text-gray-400'
+                    ? 'bg-[#c0b7d4] text-black'
+                    : 'bg-black/20 border border-[#3f3379] text-white hover:bg-black/30'
                 }`}
               >
                 <span>{category}</span>
-                <span className="text-lg">+</span>
               </button>
             ))}
           </div>
         </div>
 
-        {/* Set Max Ripples */}
-        <div className="card-gradient rounded-2xl p-6 mb-8">
-          <div className="text-white font-semibold mb-4">Set Max Ripples*</div>
-          <div className="space-y-4">
+        {/* Set Max Ripples Card */}
+        <div className="bg-black/30 backdrop-blur-md border border-[#5646a6] rounded-xl p-4 shadow-lg">
+          <h3 className="text-white text-sm font-medium font-display mb-3">Set Max Ripples</h3>
+          <div className="space-y-3">
             <input
               type="range"
               min="10"
               max="100"
               value={maxRipples}
               onChange={(e) => setMaxRipples(parseInt(e.target.value))}
-              className="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer slider"
+              className="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-purple-400"
             />
-            <div className="text-center text-white text-xl font-bold">{maxRipples}</div>
+            <div className="text-center text-white text-lg font-bold font-display">{maxRipples}</div>
           </div>
         </div>
 
         {/* Create Button */}
-        <button className="w-full bg-purple-600 hover:bg-purple-700 text-white font-semibold py-4 rounded-2xl transition-colors mb-6">
-          Start Story Seed
+        <button className="w-full bg-[#c0b7d4] hover:bg-[#d4cbe0] text-black px-4 py-3 rounded-full font-display font-medium text-sm transition-all flex items-center justify-center space-x-2 shadow-lg">
+          <FontAwesomeIcon icon={faPaperPlane} />
+          <span>Start Story Seed</span>
         </button>
+
+        <div className="h-4"></div>
       </div>
     </div>
   );

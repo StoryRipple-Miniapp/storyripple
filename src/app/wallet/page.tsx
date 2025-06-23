@@ -29,17 +29,68 @@ export default function WalletPage() {
     <div className="min-h-screen font-rounded" style={{ backgroundColor: '#1f1334' }}>
       {/* Improved galaxy/starfield background */}
       <div className="pointer-events-none absolute inset-0 overflow-hidden">
-        {[...Array(80)].map((_, i) => (
+        {/* Large twinkling stars */}
+        {[...Array(15)].map((_, i) => (
           <span
-            key={i}
+            key={`large-${i}`}
             className="absolute block bg-white rounded-full"
             style={{
-              width: `${Math.random() * 2 + 0.5}px`,
-              height: `${Math.random() * 2 + 0.5}px`,
+              width: '2px',
+              height: '2px',
               top: `${Math.random() * 100}%`,
               left: `${Math.random() * 100}%`,
-              animation: `twinkle ${Math.random() * 3 + 2}s ease-in-out infinite alternate`,
-              opacity: Math.random() * 0.8 + 0.2,
+              animation: `twinkle ${Math.random() * 4 + 3}s ease-in-out infinite`,
+              animationDelay: `${Math.random() * 2}s`,
+            }}
+          />
+        ))}
+        
+        {/* Medium floating stars */}
+        {[...Array(25)].map((_, i) => (
+          <span
+            key={`medium-${i}`}
+            className="absolute block bg-white rounded-full"
+            style={{
+              width: '1.5px',
+              height: '1.5px',
+              top: `${Math.random() * 100}%`,
+              left: `${Math.random() * 100}%`,
+              animation: `galaxyFloat ${Math.random() * 6 + 4}s ease-in-out infinite`,
+              animationDelay: `${Math.random() * 3}s`,
+              opacity: Math.random() * 0.6 + 0.2,
+            }}
+          />
+        ))}
+        
+        {/* Small pulsing stars */}
+        {[...Array(40)].map((_, i) => (
+          <span
+            key={`small-${i}`}
+            className="absolute block bg-white rounded-full"
+            style={{
+              width: '1px',
+              height: '1px',
+              top: `${Math.random() * 100}%`,
+              left: `${Math.random() * 100}%`,
+              animation: `starPulse ${Math.random() * 5 + 2}s ease-in-out infinite`,
+              animationDelay: `${Math.random() * 4}s`,
+              opacity: Math.random() * 0.4 + 0.1,
+            }}
+          />
+        ))}
+        
+        {/* Tiny distant stars */}
+        {[...Array(60)].map((_, i) => (
+          <span
+            key={`tiny-${i}`}
+            className="absolute block bg-white rounded-full opacity-30"
+            style={{
+              width: '0.5px',
+              height: '0.5px',
+              top: `${Math.random() * 100}%`,
+              left: `${Math.random() * 100}%`,
+              animation: `twinkle ${Math.random() * 8 + 6}s ease-in-out infinite`,
+              animationDelay: `${Math.random() * 5}s`,
             }}
           />
         ))}
@@ -47,7 +98,7 @@ export default function WalletPage() {
 
       <Header />
       
-      <div className="px-4 py-6 space-y-5 relative z-10 max-w-sm mx-auto max-h-[calc(100vh-160px)] overflow-y-auto scrollbar-hide">
+      <div className="px-4 py-6 space-y-5 relative z-10 max-w-sm mx-auto overflow-y-auto scrollbar-hide">
         {/* Top Right Ripples Display */}
         <div className="flex justify-end">
           <div className="inline-flex items-center space-x-2 bg-black/30 backdrop-blur-md border border-[#5646a6]/40 rounded-full px-4 py-2 shadow-lg">
