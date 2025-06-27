@@ -1,100 +1,184 @@
 'use client';
 
 import { Header } from '@/components/Header';
-import { StoryCard } from '@/components/StoryCard';
-import { RippleCard } from '@/components/RippleCard';
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faUsers, faFire, faWater, faStar, faChevronRight, faCrown } from '@fortawesome/free-solid-svg-icons';
+import { 
+  faHeart,
+  faComment,
+  faArrowUp,
+  faUser,
+  faRefresh,
+  faChevronLeft,
+  faChevronRight,
+  faDollarSign,
+  faThumbsUp,
+  faChevronDown
+} from '@fortawesome/free-solid-svg-icons';
 
 export default function FeedsPage() {
-  const [activeTab, setActiveTab] = useState<'stories' | 'ripples'>('stories');
+  const [rippleTab, setRippleTab] = useState<'trending' | 'recent'>('trending');
+  const [currentStoryIndex, setCurrentStoryIndex] = useState(0);
+  const [storyVotes, setStoryVotes] = useState<{[key: number]: number}>({});
+  const [rippleVotes, setRippleVotes] = useState<{[key: number]: number}>({});
+  const [userVotedStories, setUserVotedStories] = useState<{[key: number]: boolean}>({});
+  const [userVotedRipples, setUserVotedRipples] = useState<{[key: number]: boolean}>({});
+  const router = useRouter();
 
   const trendingStories = [
     {
-      title: 'The Mysterious Garden',
-      author: '@alice',
-      image: '/stories/1.jpg',
-      votes: 124,
-      ripples: 23,
-      liquidity: '$456.78'
+      id: 1,
+      title: 'I love dogs especially....',
+      image: 'https://picsum.photos/seed/dog/400/240',
+      ripples: 4,
+      storyPool: 50.00,
+      upvotes: 38,
+      avatars: [
+        'https://picsum.photos/seed/user1/40/40',
+        'https://picsum.photos/seed/user2/40/40',
+        'https://picsum.photos/seed/user3/40/40',
+        'https://picsum.photos/seed/user4/40/40'
+      ]
     },
     {
-      title: 'Space Adventure Chronicles',
-      author: '@bob',
-      image: '/stories/2.jpg',
-      votes: 89,
-      ripples: 15,
-      liquidity: '$312.45'
+      id: 2,
+      title: 'Money Matters..',
+      image: 'https://picsum.photos/seed/money/400/240',
+      ripples: 4,
+      storyPool: 75.50,
+      upvotes: 39,
+      avatars: [
+        'https://picsum.photos/seed/user5/40/40',
+        'https://picsum.photos/seed/user6/40/40',
+        'https://picsum.photos/seed/user7/40/40',
+        'https://picsum.photos/seed/user8/40/40'
+      ]
     },
     {
-      title: 'The Last Library on Earth',
-      author: '@bookworm',
-      image: '/stories/3.jpg',
-      votes: 234,
-      ripples: 45,
-      liquidity: '$567.89'
+      id: 3,
+      title: 'The Space Adventure Chronicles',
+      image: 'https://picsum.photos/seed/space/400/240',
+      ripples: 8,
+      storyPool: 120.25,
+      upvotes: 52,
+      avatars: [
+        'https://picsum.photos/seed/user9/40/40',
+        'https://picsum.photos/seed/user10/40/40',
+        'https://picsum.photos/seed/user11/40/40',
+        'https://picsum.photos/seed/user12/40/40'
+      ]
+    },
+    {
+      id: 4,
+      title: 'Mystery in the Old Library',
+      image: 'https://picsum.photos/seed/library/400/240',
+      ripples: 6,
+      storyPool: 89.75,
+      upvotes: 44,
+      avatars: [
+        'https://picsum.photos/seed/user13/40/40',
+        'https://picsum.photos/seed/user14/40/40',
+        'https://picsum.photos/seed/user15/40/40',
+        'https://picsum.photos/seed/user16/40/40'
+      ]
     }
   ];
 
   const ripples = [
     {
-      text: 'Why were twenty wolves standing in the garden, their eyes reflecting the moonlight like mirrors?',
-      author: '@charlie',
-      originalAuthor: '@alice',
-      votes: 45,
-      avatar: 'https://img.clerk.com/preview.png?size=100&seed=1&bg=blue&fg=white&initials=C'
+      id: 1,
+      text: 'Why does money matter so much in our society? It seems like everything revolves around it...',
+      upvotes: 38,
+      author: { avatar: 'https://picsum.photos/seed/author1/50/50', name: '@alex_writer', handle: 'Alex Writer' },
+      originalStory: 'Money Matters..',
+      timeAgo: '2h ago',
+      image: 'https://picsum.photos/seed/money2/80/80'
     },
     {
-      text: 'The old woman whispered something in a language I didn\'t recognize, but somehow I understood every word...',
-      author: '@diana',
-      originalAuthor: '@alice',
-      votes: 32,
-      avatar: 'https://img.clerk.com/preview.png?size=100&seed=2&bg=green&fg=black&initials=D'
+      id: 2,
+      text: 'The true value of money lies not in what it can buy, but in the freedom it provides...',
+      upvotes: 16,
+      author: { avatar: 'https://picsum.photos/seed/author2/50/50', name: '@sarah_tales', handle: 'Sarah Tales' },
+      originalStory: 'Money Matters..',
+      timeAgo: '4h ago',
+      image: 'https://picsum.photos/seed/purple/80/80'
     },
     {
-      text: 'Behind the garden gate, I could see lights dancing between the trees - but there was no wind.',
-      author: '@eve',
-      originalAuthor: '@alice',
-      votes: 28,
-      avatar: 'https://img.clerk.com/preview.png?size=100&seed=3&bg=red&fg=white&initials=E'
+      id: 3,
+      text: 'The success story of Steve Jobs teaches us that innovation beats everything else...',
+      upvotes: 45,
+      author: { avatar: 'https://picsum.photos/seed/author3/50/50', name: '@tech_guru', handle: 'Tech Guru' },
+      originalStory: 'Success Stories',
+      timeAgo: '6h ago',
+      image: 'https://picsum.photos/seed/books/80/80'
     },
     {
-      text: 'The captain\'s logbook mentioned coordinates that shouldn\'t exist in our galaxy...',
-      author: '@frank',
-      originalAuthor: '@bob',
-      votes: 19,
-      avatar: 'https://img.clerk.com/preview.png?size=100&seed=4&bg=yellow&fg=black&initials=F'
+      id: 4,
+      text: 'Women are who they are because society shapes them, but they can reshape society too...',
+      upvotes: 22,
+      author: { avatar: 'https://picsum.photos/seed/author4/50/50', name: '@emma_voice', handle: 'Emma Voice' },
+      originalStory: 'Women Empowerment',
+      timeAgo: '8h ago',
+      image: 'https://picsum.photos/seed/women/80/80'
+    },
+    {
+      id: 5,
+      text: 'I love dogs honestly because they teach us unconditional love every single day...',
+      upvotes: 30,
+      author: { avatar: 'https://picsum.photos/seed/author5/50/50', name: '@dog_lover', handle: 'Dog Lover' },
+      originalStory: 'I love dogs especially....',
+      timeAgo: '12h ago',
+      image: 'https://picsum.photos/seed/dogs/80/80'
     }
   ];
 
-  const renderTabs = () => (
-    <div className="flex justify-center mb-5">
-      <div className="bg-black/20 backdrop-blur-md border border-[#3f3379] rounded-full p-1 flex items-center space-x-2">
-        <button
-          onClick={() => setActiveTab('stories')}
-          className={`px-4 py-2 rounded-full font-display font-medium text-xs flex items-center justify-center space-x-2 transition-all ${
-            activeTab === 'stories' ? 'bg-[#c0b7d4] text-black' : 'text-white'
-          }`}
-        >
-          <FontAwesomeIcon icon={faFire} />
-          <span>Trending Stories</span>
-        </button>
-        <button
-          onClick={() => setActiveTab('ripples')}
-          className={`px-4 py-2 rounded-full font-display font-medium text-xs flex items-center justify-center space-x-2 transition-all ${
-            activeTab === 'ripples' ? 'bg-[#c0b7d4] text-black' : 'text-white'
-          }`}
-        >
-          <FontAwesomeIcon icon={faWater} />
-          <span>Latest Ripples</span>
-        </button>
-      </div>
-    </div>
-  );
+  // Navigation functions
+  const nextStory = () => {
+    setCurrentStoryIndex((prev) => (prev + 1) % trendingStories.length);
+  };
+
+  const prevStory = () => {
+    setCurrentStoryIndex((prev) => (prev - 1 + trendingStories.length) % trendingStories.length);
+  };
+
+  // Vote functions
+  const handleStoryVote = (storyId: number, currentVotes: number) => {
+    if (userVotedStories[storyId]) {
+      setStoryVotes(prev => ({ ...prev, [storyId]: (prev[storyId] || currentVotes) - 1 }));
+      setUserVotedStories(prev => ({ ...prev, [storyId]: false }));
+    } else {
+      setStoryVotes(prev => ({ ...prev, [storyId]: (prev[storyId] || currentVotes) + 1 }));
+      setUserVotedStories(prev => ({ ...prev, [storyId]: true }));
+    }
+  };
+
+  const handleRippleVote = (rippleId: number, currentVotes: number) => {
+    if (userVotedRipples[rippleId]) {
+      setRippleVotes(prev => ({ ...prev, [rippleId]: (prev[rippleId] || currentVotes) - 1 }));
+      setUserVotedRipples(prev => ({ ...prev, [rippleId]: false }));
+    } else {
+      setRippleVotes(prev => ({ ...prev, [rippleId]: (prev[rippleId] || currentVotes) + 1 }));
+      setUserVotedRipples(prev => ({ ...prev, [rippleId]: true }));
+    }
+  };
+
+  const handleCreateRipple = (storyId: number) => {
+    router.push(`/create?ripple=true&storyId=${storyId}`);
+  };
+
+  const getCurrentStories = () => {
+    const stories = [];
+    for (let i = 0; i < 2; i++) {
+      const index = (currentStoryIndex + i) % trendingStories.length;
+      stories.push(trendingStories[index]);
+    }
+    return stories;
+  };
 
   return (
     <div className="min-h-screen font-rounded" style={{ backgroundColor: '#1f1334' }}>
+      {/* Galaxy Background */}
       <div className="pointer-events-none absolute inset-0 overflow-hidden">
         {/* Large twinkling stars */}
         {[...Array(15)].map((_, i) => (
@@ -165,26 +249,217 @@ export default function FeedsPage() {
       
       <Header />
       
-      <div className="px-4 py-6 relative z-10 max-w-sm mx-auto overflow-y-auto scrollbar-hide">
-        {renderTabs()}
+      <div className="px-4 py-6 relative z-10 max-w-sm mx-auto pt-28 pb-32 space-y-8">
         
-        {activeTab === 'stories' && (
-          <div className="space-y-4">
-            {trendingStories.map((story, index) => (
-              <StoryCard key={index} {...story} />
+        {/* Trending Stories Section */}
+        <div>
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-white text-lg font-bold font-display">TRENDING STORIES</h2>
+            <div className="flex space-x-2">
+              <button
+                onClick={prevStory}
+                className="w-8 h-8 bg-black/30 backdrop-blur-md border border-[#5646a6] rounded-full flex items-center justify-center text-white hover:border-[#7c3aed] transition-all"
+              >
+                <FontAwesomeIcon icon={faChevronLeft} className="text-xs" />
+              </button>
+              <button
+                onClick={nextStory}
+                className="w-8 h-8 bg-black/30 backdrop-blur-md border border-[#5646a6] rounded-full flex items-center justify-center text-white hover:border-[#7c3aed] transition-all"
+              >
+                <FontAwesomeIcon icon={faChevronRight} className="text-xs" />
+              </button>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            {getCurrentStories().map((story) => (
+              <div key={story.id} className="bg-gradient-to-br from-black/40 to-black/20 backdrop-blur-md border border-[#5646a6] rounded-2xl overflow-hidden relative group hover:border-[#7c3aed] transition-all duration-300 hover:scale-105">
+                <div className="absolute inset-0 bg-gradient-to-br from-[#7c3aed]/20 via-transparent to-[#5646a6]/20 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                
+                <div className="relative z-10">
+                  {/* Story Image */}
+                  <div className="aspect-[4/3] relative overflow-hidden">
+                    <img 
+                      src={story.image} 
+                      alt={story.title}
+                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+                  </div>
+                  
+                  {/* Story Content */}
+                  <div className="p-4">
+                    <h3 className="text-white font-semibold text-sm mb-3 leading-tight line-clamp-2">{story.title}</h3>
+                    
+                    {/* User Avatars */}
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="flex items-center">
+                        <div className="flex -space-x-2">
+                          {story.avatars.slice(0, 3).map((avatar, index) => (
+                            <img
+                              key={index}
+                              src={avatar}
+                              alt={`User ${index + 1}`}
+                              className="w-6 h-6 rounded-full border-2 border-[#1f1334] hover:scale-110 transition-transform"
+                            />
+                          ))}
+                        </div>
+                        <span className="text-gray-300 text-xs ml-2 font-medium">+{story.ripples}</span>
+                      </div>
+                      
+                      {/* Upvote Button */}
+                      <button
+                        onClick={() => handleStoryVote(story.id, story.upvotes)}
+                        className={`w-10 h-10 rounded-full flex items-center justify-center transition-all transform hover:scale-110 ${
+                          userVotedStories[story.id] 
+                            ? 'bg-gradient-to-r from-green-500 to-emerald-500 text-white shadow-lg shadow-green-500/30' 
+                            : 'bg-black/30 text-gray-400 hover:text-green-400 hover:bg-green-500/20'
+                        }`}
+                      >
+                        <FontAwesomeIcon icon={faThumbsUp} className="text-sm" />
+                      </button>
+                    </div>
+                    
+                    {/* Story Pool & Upvotes */}
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-center space-x-2 bg-gradient-to-r from-green-500/20 to-emerald-500/20 rounded-lg p-2 border border-green-500/30">
+                        <FontAwesomeIcon icon={faDollarSign} className="text-green-400 text-sm" />
+                        <span className="text-green-400 font-bold text-sm">{story.storyPool.toFixed(2)}</span>
+                        <span className="text-green-300 text-xs">POOL</span>
+                      </div>
+                      
+                      <div className="text-center">
+                        <p className="text-white text-xs font-medium">
+                          {storyVotes[story.id] || story.upvotes} Upvotes
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
             ))}
           </div>
-        )}
 
-        {activeTab === 'ripples' && (
-          <div className="space-y-3">
+          {/* Progress Indicator */}
+          <div className="flex justify-center space-x-2 mt-4">
+            {trendingStories.map((_, index) => (
+              <div
+                key={index}
+                className={`w-2 h-2 rounded-full transition-all duration-300 ${
+                  Math.floor(index / 2) === Math.floor(currentStoryIndex / 2)
+                    ? 'bg-[#c0b7d4] w-6' 
+                    : 'bg-gray-600'
+                }`}
+              />
+            ))}
+          </div>
+        </div>
+
+        {/* Ripples Section */}
+        <div>
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-white text-lg font-bold font-display">RIPPLES</h2>
+            <div className="flex space-x-2">
+              <button
+                onClick={() => setRippleTab('trending')}
+                className={`px-4 py-2 rounded-full text-xs font-medium transition-all ${
+                  rippleTab === 'trending' 
+                    ? 'bg-gradient-to-r from-[#c0b7d4] to-[#d4cbe0] text-black' 
+                    : 'bg-black/30 text-gray-400 border border-[#5646a6] hover:border-[#7c3aed]'
+                }`}
+              >
+                Trending
+              </button>
+              <button
+                onClick={() => setRippleTab('recent')}
+                className={`px-4 py-2 rounded-full text-xs font-medium transition-all ${
+                  rippleTab === 'recent' 
+                    ? 'bg-gradient-to-r from-[#c0b7d4] to-[#d4cbe0] text-black' 
+                    : 'bg-black/30 text-gray-400 border border-[#5646a6] hover:border-[#7c3aed]'
+                }`}
+              >
+                Recent
+              </button>
+            </div>
+          </div>
+
+          {/* Ripples List */}
+          <div className="bg-gradient-to-r from-[#4c3b7a]/40 to-[#5b4a8a]/30 backdrop-blur-md border border-[#6b5b9a]/50 rounded-2xl overflow-hidden">
             {ripples.map((ripple, index) => (
-              <RippleCard key={index} {...ripple} rippleId={index + 1} />
+              <div key={ripple.id} className="relative">
+                <div className="p-5 flex items-center space-x-4">
+                  {/* Left: Upvote Button */}
+                  <div className="flex flex-col items-center">
+                    <button
+                      onClick={() => handleRippleVote(ripple.id, ripple.upvotes)}
+                      className="w-14 h-14 rounded-full bg-gradient-to-b from-green-400 to-green-500 text-white flex items-center justify-center transition-all hover:shadow-lg hover:shadow-green-500/30"
+                    >
+                      <FontAwesomeIcon icon={faArrowUp} className="text-lg" />
+                    </button>
+                    <span className="text-white text-sm font-medium mt-2">
+                      {rippleVotes[ripple.id] || ripple.upvotes} Upvotes
+                    </span>
+                  </div>
+                  
+                  {/* Center Left: Story Image */}
+                  <div className="flex-shrink-0">
+                    <img 
+                      src={ripple.image} 
+                      alt="Story"
+                      className="w-20 h-20 rounded-xl object-cover"
+                    />
+                  </div>
+                  
+                  {/* Center: Content */}
+                  <div className="flex-1 min-w-0">
+                    <h3 className="text-white font-semibold text-lg mb-3 leading-tight">
+                      {ripple.text}
+                    </h3>
+                    <button className="text-gray-300 text-sm flex items-center space-x-1 hover:text-white transition-colors">
+                      <span>Read more</span>
+                      <FontAwesomeIcon icon={faChevronDown} className="text-xs" />
+                    </button>
+                  </div>
+                  
+                  {/* Right: Rippler & Creator */}
+                  <div className="flex flex-col space-y-4">
+                    {/* Rippler */}
+                    <div className="flex flex-col items-center">
+                      <div className="text-xs text-gray-400 mb-1 font-medium">RIPPLER</div>
+                      <img 
+                        src={ripple.author.avatar} 
+                        alt={ripple.author.name}
+                        className="w-12 h-12 rounded-full"
+                      />
+                    </div>
+                    
+                    {/* Creator */}
+                    <div className="flex flex-col items-center">
+                      <div className="text-xs text-gray-400 mb-1 font-medium">CREATOR</div>
+                      <img 
+                        src={`https://picsum.photos/seed/creator${ripple.id}/50/50`} 
+                        alt="Creator"
+                        className="w-12 h-12 rounded-full"
+                      />
+                    </div>
+                    
+                    {/* Refresh Icon */}
+                    <div className="flex justify-center">
+                      <div className="w-8 h-8 rounded-full bg-green-500/30 flex items-center justify-center">
+                        <FontAwesomeIcon icon={faRefresh} className="text-green-400 text-sm" />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                
+                {/* Thin separator line (except for last item) */}
+                {index < ripples.length - 1 && (
+                  <div className="mx-5 h-px bg-gradient-to-r from-transparent via-gray-600/30 to-transparent" />
+                )}
+              </div>
             ))}
           </div>
-        )}
-
-        <div className="h-4"></div>
+        </div>
       </div>
     </div>
   );
