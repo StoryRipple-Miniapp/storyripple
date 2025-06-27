@@ -5,6 +5,8 @@ import { useAccount, useConnect, useDisconnect } from 'wagmi'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faWallet, faPlug, faExclamationTriangle, faGlobe } from '@fortawesome/free-solid-svg-icons'
 import { IS_DEMO_MODE } from '@/lib/wagmi'
+import { getWalletLogo } from '@/lib/wallet-logos'
+import Image from 'next/image'
 
 export function WalletConnection() {
   const { address, isConnected, chain } = useAccount()
@@ -104,10 +106,21 @@ export function WalletConnection() {
                   setShowConnectors(false);
                 }}
                 disabled={isPending}
-                className="w-full text-left px-3 py-2 text-sm text-gray-300 hover:text-white hover:bg-white/10 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-between"
+                className="w-full text-left px-3 py-2 text-sm text-gray-300 hover:text-white hover:bg-white/10 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-3"
               >
-                <span>{connector.name}</span>
-                {isPending && <span className="text-xs text-yellow-400">Connecting...</span>}
+                <div className="w-8 h-8 relative flex-shrink-0">
+                  <Image
+                    src={getWalletLogo(connector.name)}
+                    alt={connector.name}
+                    width={32}
+                    height={32}
+                    className="rounded-md"
+                  />
+                </div>
+                <div className="flex-1 flex items-center justify-between">
+                  <span>{connector.name}</span>
+                  {isPending && <span className="text-xs text-yellow-400">Connecting...</span>}
+                </div>
               </button>
             ))}
           </div>
