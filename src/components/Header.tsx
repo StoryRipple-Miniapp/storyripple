@@ -3,6 +3,8 @@
 import { usePathname, useRouter } from 'next/navigation';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faWallet, faBookOpenReader } from '@fortawesome/free-solid-svg-icons';
+import { WalletConnection } from './WalletConnection';
+import { IS_DEMO_MODE } from '@/lib/wagmi';
 
 export function Header() {
   const pathname = usePathname();
@@ -32,7 +34,7 @@ export function Header() {
   };
 
   return (
-    <div className="fixed top-0 left-0 w-full z-50 header-modern safe-area-top">
+    <div className={`fixed left-0 w-full z-50 header-modern safe-area-top ${IS_DEMO_MODE ? 'top-10' : 'top-0'}`}>
       <div className="flex items-center justify-between px-6 py-4 max-w-sm mx-auto md:max-w-none md:mx-0">
         {/* Rules icon */}
         <div className="flex-shrink-0">
@@ -52,19 +54,9 @@ export function Header() {
           </h1>
         </div>
         
-        {/* Wallet Icon */}
-        <div className="flex-shrink-0">
-          <button 
-            className="nft-card w-11 h-11 flex items-center justify-center group"
-            onClick={() => router.push('/wallet')}
-            aria-label="Open wallet"
-          >
-            <FontAwesomeIcon 
-              icon={faWallet} 
-              size="lg" 
-              className="text-white" 
-            />
-          </button>
+        {/* Wallet Connection */}
+        <div className="flex-shrink-0 relative">
+          <WalletConnection />
         </div>
       </div>
     </div>

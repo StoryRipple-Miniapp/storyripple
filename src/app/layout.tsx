@@ -3,6 +3,7 @@ import { Inter, Space_Grotesk } from "next/font/google";
 import "./globals.css";
 import { BottomNavigation } from "@/components/BottomNavigation";
 import { WalletProvider } from "@/components/WalletProvider";
+import { DemoBanner } from "@/components/DemoBanner";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -39,6 +40,7 @@ export default function RootLayout({
     <html lang="en" className={`${inter.variable} ${spaceGrotesk.variable}`}>
       <body className="font-sans text-white min-h-screen antialiased" style={{ backgroundColor: '#1f1334' }}>
         <WalletProvider>
+          <DemoBanner />
           <div className="min-h-screen">
             <main className="pb-28">
               {children}

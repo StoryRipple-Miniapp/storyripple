@@ -1,8 +1,11 @@
 # Copy this file to .env.local and fill in your values
 
+# Demo/Testnet Mode (set to false for production)
+NEXT_PUBLIC_DEMO_MODE=true
+
 # Zora Configuration
 # Get your API key from: https://zora.co/settings/developer
-NEXT_PUBLIC_ZORA_API_KEY=your_zora_api_key_here
+NEXT_PUBLIC_ZORA_API_KEY=zora_api_aec678b5bf247727f93f211f58924001dae7c6c11ca458ccf409211728c63cf8
 
 # RPC URLs (required for proper Zora SDK functionality)
 # You can get these from:
@@ -11,11 +14,14 @@ NEXT_PUBLIC_ZORA_API_KEY=your_zora_api_key_here
 # - QuickNode: https://quicknode.com/
 # - Or use public RPCs (not recommended for production)
 
-# Base Mainnet RPC (required for Zora Coins)
+# Base Mainnet RPC (for production)
 NEXT_PUBLIC_BASE_RPC_URL=https://mainnet.base.org
 
-# Base Sepolia RPC (for testing)
+# Base Sepolia RPC (for demo/testing)
 NEXT_PUBLIC_BASE_SEPOLIA_RPC_URL=https://sepolia.base.org
+
+# Ethereum Sepolia RPC (for demo/testing)
+NEXT_PUBLIC_SEPOLIA_RPC_URL=https://eth-sepolia.public.blastapi.io
 
 # Optional: Custom platform referrer address (leave blank to use default)
 # This address will earn 15% of creation and trading fees

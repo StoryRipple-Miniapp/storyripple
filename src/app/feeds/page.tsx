@@ -14,8 +14,11 @@ import {
   faChevronRight,
   faDollarSign,
   faThumbsUp,
-  faChevronDown
+  faChevronDown,
+  faCoins
 } from '@fortawesome/free-solid-svg-icons';
+import { useAccount } from 'wagmi';
+import { useZoraCoins } from '@/hooks/useZoraCoins';
 
 export default function FeedsPage() {
   const [rippleTab, setRippleTab] = useState<'trending' | 'recent'>('trending');
@@ -24,7 +27,11 @@ export default function FeedsPage() {
   const [rippleVotes, setRippleVotes] = useState<{[key: number]: number}>({});
   const [userVotedStories, setUserVotedStories] = useState<{[key: number]: boolean}>({});
   const [userVotedRipples, setUserVotedRipples] = useState<{[key: number]: boolean}>({});
+  const [showTrading, setShowTrading] = useState<{[key: number]: boolean}>({});
+  const [buyAmount, setBuyAmount] = useState('0.01');
   const router = useRouter();
+  const { isConnected } = useAccount();
+  const { buyCoin, isLoading, error } = useZoraCoins();
 
   const trendingStories = [
     {
@@ -39,7 +46,11 @@ export default function FeedsPage() {
         'https://picsum.photos/seed/user2/40/40',
         'https://picsum.photos/seed/user3/40/40',
         'https://picsum.photos/seed/user4/40/40'
-      ]
+      ],
+      // Real coin data - these would come from your backend/API
+      coinAddress: '0x1234567890123456789012345678901234567890',
+      coinSymbol: 'DOGS',
+      coinPrice: '0.0023'
     },
     {
       id: 2,
@@ -53,7 +64,10 @@ export default function FeedsPage() {
         'https://picsum.photos/seed/user6/40/40',
         'https://picsum.photos/seed/user7/40/40',
         'https://picsum.photos/seed/user8/40/40'
-      ]
+      ],
+      coinAddress: '0x2345678901234567890123456789012345678901',
+      coinSymbol: 'MONEY',
+      coinPrice: '0.0041'
     },
     {
       id: 3,
@@ -67,7 +81,10 @@ export default function FeedsPage() {
         'https://picsum.photos/seed/user10/40/40',
         'https://picsum.photos/seed/user11/40/40',
         'https://picsum.photos/seed/user12/40/40'
-      ]
+      ],
+      coinAddress: '0x3456789012345678901234567890123456789012',
+      coinSymbol: 'SPACE',
+      coinPrice: '0.0067'
     },
     {
       id: 4,
@@ -82,6 +99,7 @@ export default function FeedsPage() {
         'https://picsum.photos/seed/user15/40/40',
         'https://picsum.photos/seed/user16/40/40'
       ]
+      // No coin for this story - showing both scenarios
     }
   ];
 
@@ -334,6 +352,67 @@ export default function FeedsPage() {
                         </p>
                       </div>
                     </div>
+
+                    {/* Coin Trading Section */}
+                    {story.coinAddress && (
+                      <div className="mt-3 pt-3 border-t border-gray-600">
+                        <div className="flex items-center justify-between mb-2">
+                          <div className="flex items-center space-x-1">
+                            <FontAwesomeIcon icon={faCoins} className="text-yellow-400 text-xs" />
+                            <span className="text-yellow-400 text-xs font-medium">{story.coinSymbol}</span>
+                            <span className="text-gray-400 text-xs">${story.coinPrice}</span>
+                          </div>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setShowTrading(prev => ({ ...prev, [story.id]: !prev[story.id] }));
+                            }}
+                            className="px-2 py-1 bg-purple-600 hover:bg-purple-700 text-white text-xs rounded transition-colors"
+                            disabled={!isConnected}
+                          >
+                            {isConnected ? 'Trade' : 'Connect'}
+                          </button>
+                        </div>
+                        
+                        {/* Trading Interface */}
+                        {showTrading[story.id] && isConnected && (
+                          <div className="space-y-2">
+                            <div className="flex items-center space-x-2">
+                              <input
+                                type="number"
+                                value={buyAmount}
+                                onChange={(e) => setBuyAmount(e.target.value)}
+                                placeholder="0.01"
+                                step="0.01"
+                                min="0.001"
+                                className="flex-1 px-2 py-1 bg-black/30 border border-gray-600 rounded text-white text-xs"
+                              />
+                              <span className="text-gray-400 text-xs">ETH</span>
+                            </div>
+                            <button
+                              onClick={async (e) => {
+                                e.stopPropagation();
+                                try {
+                                  await buyCoin(story.coinAddress!, buyAmount);
+                                  alert('Purchase successful!');
+                                  setShowTrading(prev => ({ ...prev, [story.id]: false }));
+                                } catch (err) {
+                                  console.error('Buy failed:', err);
+                                  alert('Purchase failed');
+                                }
+                              }}
+                              disabled={isLoading}
+                              className="w-full px-3 py-1 bg-green-600 hover:bg-green-700 disabled:bg-gray-600 text-white text-xs rounded transition-colors"
+                            >
+                              {isLoading ? 'Buying...' : 'Buy Coin'}
+                            </button>
+                            {error && (
+                              <p className="text-red-400 text-xs">{error}</p>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>

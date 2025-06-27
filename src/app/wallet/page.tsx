@@ -7,6 +7,7 @@ import { faLightbulb, faEye, faEyeSlash, faCopy, faSpinner } from '@fortawesome/
 import { useAccount, useConnect, useBalance } from 'wagmi';
 import { useZoraCoins } from '@/hooks/useZoraCoins';
 
+
 export default function WalletPage() {
   const { address, isConnected } = useAccount();
   const { connect, connectors } = useConnect();
@@ -170,6 +171,18 @@ export default function WalletPage() {
             </div>
           </div>
         </div>
+
+        {/* Story Coin Balances */}
+        {isConnected && (
+          <div className="space-y-2">
+            <h3 className="text-white text-sm font-medium font-display">Story Coin Balances</h3>
+            <div className="bg-black/30 backdrop-blur-md border border-[#5646a6] rounded-xl p-4 text-center">
+              <p className="text-gray-400 text-sm">
+                Coin balances will appear here once you own story coins
+              </p>
+            </div>
+          </div>
+        )}
 
         {/* Separator Line */}
         <div className="w-full h-px bg-gradient-to-r from-transparent via-[#5646a6]/50 to-transparent"></div>
