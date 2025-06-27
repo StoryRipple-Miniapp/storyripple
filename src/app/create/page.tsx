@@ -53,10 +53,14 @@ export default function CreatePage() {
       
       // Create coin if enabled and not in ripple mode
       if (createCoin && !isRippleMode && isConnected) {
+        // Generate a unique story ID for the coin
+        const newStoryId = `story-${Date.now()}-${Math.random().toString(36).substring(2, 15)}`;
+        
         coinData = await createStoryCoin({
           title: storyText.substring(0, 50), // Use first 50 chars as title
           author: 'Anonymous', // Could be fetched from Farcaster profile
-          description: storyText
+          description: storyText,
+          storyId: newStoryId
         });
       }
 

@@ -1,0 +1,29 @@
+# Copy this file to .env.local and fill in your values
+
+# Zora Configuration
+# Get your API key from: https://zora.co/settings/developer
+NEXT_PUBLIC_ZORA_API_KEY=your_zora_api_key_here
+
+# RPC URLs (required for proper Zora SDK functionality)
+# You can get these from:
+# - Alchemy: https://alchemy.com/
+# - Infura: https://infura.io/
+# - QuickNode: https://quicknode.com/
+# - Or use public RPCs (not recommended for production)
+
+# Base Mainnet RPC (required for Zora Coins)
+NEXT_PUBLIC_BASE_RPC_URL=https://mainnet.base.org
+
+# Base Sepolia RPC (for testing)
+NEXT_PUBLIC_BASE_SEPOLIA_RPC_URL=https://sepolia.base.org
+
+# Optional: Custom platform referrer address (leave blank to use default)
+# This address will earn 15% of creation and trading fees
+NEXT_PUBLIC_PLATFORM_REFERRER=
+
+# Wallet Configuration
+# These are optional - the app will use sensible defaults
+NEXT_PUBLIC_WALLET_CONNECT_PROJECT_ID=your_wallet_connect_project_id
+
+# Development settings
+NODE_ENV=development 
