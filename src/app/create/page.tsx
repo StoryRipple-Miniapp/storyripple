@@ -2,9 +2,11 @@
 
 import { Header } from '@/components/Header';
 import { useState, useEffect } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams, useRouter } from 'next/navigation';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faPlus, faImage, faPaperPlane, faReply } from '@fortawesome/free-solid-svg-icons';
+import { faPlus, faImage, faPaperPlane, faReply, faCoins, faSpinner } from '@fortawesome/free-solid-svg-icons';
+import { useAccount } from 'wagmi';
+import { useZoraCoins } from '@/hooks/useZoraCoins';
 
 export default function CreatePage() {
   const [storyText, setStoryText] = useState('');
@@ -12,7 +14,13 @@ export default function CreatePage() {
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [isRippleMode, setIsRippleMode] = useState(false);
   const [storyId, setStoryId] = useState<string | null>(null);
+  const [createCoin, setCreateCoin] = useState(true);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  
   const searchParams = useSearchParams();
+  const router = useRouter();
+  const { isConnected } = useAccount();
+  const { createStoryCoin, isLoading } = useZoraCoins();
 
   const categories = ['Fantasy', 'Sci-Fi', 'Mystery', 'Horror', 'Romance', 'Adventure'];
 
@@ -34,6 +42,44 @@ export default function CreatePage() {
         ? prev.filter(c => c !== category)
         : [...prev, category]
     );
+  };
+
+  const handleSubmit = async () => {
+    if (!storyText.trim()) return;
+
+    setIsSubmitting(true);
+    try {
+      let coinData = null;
+      
+      // Create coin if enabled and not in ripple mode
+      if (createCoin && !isRippleMode && isConnected) {
+        coinData = await createStoryCoin({
+          title: storyText.substring(0, 50), // Use first 50 chars as title
+          author: 'Anonymous', // Could be fetched from Farcaster profile
+          description: storyText
+        });
+      }
+
+      // Create the story (this would integrate with your backend)
+      const storyData = {
+        text: storyText,
+        categories: selectedCategories,
+        maxRipples: isRippleMode ? undefined : maxRipples,
+        coinAddress: coinData?.coinAddress,
+        coinSymbol: coinData?.symbol,
+        isRipple: isRippleMode,
+        parentStoryId: storyId
+      };
+
+      console.log('Creating story:', storyData);
+
+      // Navigate back to feeds after successful creation
+      router.push('/feeds');
+    } catch (error) {
+      console.error('Failed to create story:', error);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -175,6 +221,39 @@ export default function CreatePage() {
                 <div className="text-center text-white text-lg font-bold font-display">{maxRipples}</div>
               </div>
             </div>
+
+            {/* Create Coin Toggle */}
+            <div className="bg-black/30 backdrop-blur-md border border-[#5646a6] rounded-xl p-4 shadow-lg">
+              <div className="flex items-center justify-between mb-2">
+                <h3 className="text-white text-sm font-medium font-display">Create Story Coin</h3>
+                <FontAwesomeIcon icon={faCoins} className="text-yellow-400" />
+              </div>
+              <p className="text-xs text-gray-400 mb-3">
+                Enable trading for your story. Readers can buy/sell your story coin based on its popularity.
+              </p>
+              <div className="flex items-center justify-between">
+                <span className="text-xs text-gray-300">
+                  {createCoin ? 'Coin will be created' : 'No coin creation'}
+                </span>
+                <button
+                  onClick={() => setCreateCoin(!createCoin)}
+                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                    createCoin ? 'bg-[#c0b7d4]' : 'bg-gray-600'
+                  }`}
+                >
+                  <span
+                    className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                      createCoin ? 'translate-x-6' : 'translate-x-1'
+                    }`}
+                  />
+                </button>
+              </div>
+              {!isConnected && createCoin && (
+                <p className="text-xs text-orange-400 mt-2">
+                  ⚠️ Connect wallet to create coins
+                </p>
+              )}
+            </div>
           </>
         )}
 
@@ -192,9 +271,24 @@ export default function CreatePage() {
         )}
 
         {/* Create Button */}
-        <button className="w-full bg-[#c0b7d4] hover:bg-[#d4cbe0] text-black px-4 py-3 rounded-full font-display font-medium text-sm transition-all flex items-center justify-center space-x-2 shadow-lg">
-          <FontAwesomeIcon icon={isRippleMode ? faReply : faPaperPlane} />
-          <span>{isRippleMode ? 'Add Ripple' : 'Start Story Seed'}</span>
+        <button 
+          onClick={handleSubmit}
+          disabled={!storyText.trim() || isSubmitting || isLoading}
+          className="w-full bg-[#c0b7d4] hover:bg-[#d4cbe0] text-black px-4 py-3 rounded-full font-display font-medium text-sm transition-all flex items-center justify-center space-x-2 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          {(isSubmitting || isLoading) ? (
+            <>
+              <FontAwesomeIcon icon={faSpinner} className="animate-spin" />
+              <span>
+                {createCoin && !isRippleMode ? 'Creating Story & Coin...' : isRippleMode ? 'Adding Ripple...' : 'Creating Story...'}
+              </span>
+            </>
+          ) : (
+            <>
+              <FontAwesomeIcon icon={isRippleMode ? faReply : faPaperPlane} />
+              <span>{isRippleMode ? 'Add Ripple' : 'Start Story Seed'}</span>
+            </>
+          )}
         </button>
 
         <div className="h-4"></div>

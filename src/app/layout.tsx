@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Inter, Space_Grotesk } from "next/font/google";
 import "./globals.css";
 import { BottomNavigation } from "@/components/BottomNavigation";
+import { WalletProvider } from "@/components/WalletProvider";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -37,12 +38,14 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${inter.variable} ${spaceGrotesk.variable}`}>
       <body className="font-sans text-white min-h-screen antialiased" style={{ backgroundColor: '#1f1334' }}>
-        <div className="min-h-screen">
-          <main className="pb-28">
-            {children}
-          </main>
-        </div>
-        <BottomNavigation />
+        <WalletProvider>
+          <div className="min-h-screen">
+            <main className="pb-28">
+              {children}
+            </main>
+          </div>
+          <BottomNavigation />
+        </WalletProvider>
       </body>
     </html>
   );

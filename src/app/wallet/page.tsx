@@ -4,16 +4,26 @@ import { Header } from '@/components/Header';
 import { useState } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faLightbulb, faEye, faEyeSlash, faCopy, faSpinner } from '@fortawesome/free-solid-svg-icons';
+import { useAccount, useConnect, useBalance } from 'wagmi';
+import { useZoraCoins } from '@/hooks/useZoraCoins';
 
 export default function WalletPage() {
-  const [walletCreated, setWalletCreated] = useState(false);
+  const { address, isConnected } = useAccount();
+  const { connect, connectors } = useConnect();
+  const { data: balance } = useBalance({
+    address: address,
+  });
+  const { isLoading: zoraLoading, error: zoraError } = useZoraCoins();
+  
   const [termsAccepted, setTermsAccepted] = useState(false);
   const [isCreatingWallet, setIsCreatingWallet] = useState(false);
   const [showFullAddress, setShowFullAddress] = useState(false);
   const [copySuccess, setCopySuccess] = useState(false);
   
-  const fullWalletAddress = "0xffjhllAbCd1234567890EfGh2fa";
-  const shortWalletAddress = "0xffjhll....2fa";
+  const fullWalletAddress = address || "0x0000000000000000000000000000000000000000";
+  const shortWalletAddress = address 
+    ? `${address.substring(0, 6)}....${address.substring(address.length - 4)}`
+    : "0x0000....0000";
 
   const handleCopyAddress = async () => {
     try {
@@ -151,8 +161,12 @@ export default function WalletPage() {
             <div className="absolute inset-0 rounded-lg shadow-[0_0_20px_rgba(86,70,166,0.3)] opacity-60"></div>
             
             <div className="text-center relative z-10">
-              <div className="text-3xl font-bold text-gray-400 mb-1">$0.00</div>
-              <div className="text-xs text-gray-500">1 RIPPLE = $1.00</div>
+              <div className="text-3xl font-bold text-white mb-1">
+                {balance ? `${parseFloat(balance.formatted).toFixed(4)} ${balance.symbol}` : '$0.00'}
+              </div>
+              <div className="text-xs text-gray-500">
+                {isConnected ? 'Real wallet balance' : '1 RIPPLE = $1.00'}
+              </div>
             </div>
           </div>
         </div>
@@ -188,24 +202,36 @@ export default function WalletPage() {
 
         {/* Action Buttons - Now in one line after terms */}
         <div className="flex space-x-3 pt-2">
-          <button 
-            onClick={() => {
-              setIsCreatingWallet(true);
-              setTimeout(() => setIsCreatingWallet(false), 3000);
-            }}
-            className="flex-1 bg-[#c0b7d4] text-black px-4 py-2 rounded-full font-display font-medium text-xs flex items-center justify-center space-x-2 hover:bg-[#d4cbe0] transition-all whitespace-nowrap"
-          >
-            <FontAwesomeIcon 
-              icon={faSpinner} 
-              className={`${isCreatingWallet ? 'animate-spin' : ''}`} 
-              size="sm" 
-            />
-            <span>Creating Your Wallet</span>
-          </button>
-          
-          <button className="flex-1 bg-black/20 backdrop-blur-md border border-[#3f3379] text-white px-4 py-2 rounded-full font-display font-medium text-xs hover:bg-black/30 transition-all shadow-lg whitespace-nowrap">
-            Add funds
-          </button>
+          {!isConnected ? (
+            <button 
+              onClick={() => connect({ connector: connectors[0] })}
+              className="w-full bg-[#c0b7d4] text-black px-4 py-2 rounded-full font-display font-medium text-xs flex items-center justify-center space-x-2 hover:bg-[#d4cbe0] transition-all whitespace-nowrap"
+            >
+              <FontAwesomeIcon icon={faSpinner} />
+              <span>Connect Wallet</span>
+            </button>
+          ) : (
+            <>
+              <button 
+                onClick={() => {
+                  setIsCreatingWallet(true);
+                  setTimeout(() => setIsCreatingWallet(false), 3000);
+                }}
+                className="flex-1 bg-[#c0b7d4] text-black px-4 py-2 rounded-full font-display font-medium text-xs flex items-center justify-center space-x-2 hover:bg-[#d4cbe0] transition-all whitespace-nowrap"
+              >
+                <FontAwesomeIcon 
+                  icon={faSpinner} 
+                  className={`${isCreatingWallet ? 'animate-spin' : ''}`} 
+                  size="sm" 
+                />
+                <span>Wallet Connected</span>
+              </button>
+              
+              <button className="flex-1 bg-black/20 backdrop-blur-md border border-[#3f3379] text-white px-4 py-2 rounded-full font-display font-medium text-xs hover:bg-black/30 transition-all shadow-lg whitespace-nowrap">
+                Add funds
+              </button>
+            </>
+          )}
         </div>
 
         {/* Bottom padding for navigation clearance */}
