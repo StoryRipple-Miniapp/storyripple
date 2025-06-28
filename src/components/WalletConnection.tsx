@@ -29,17 +29,20 @@ export function WalletConnection() {
         
         {/* Connected Wallet */}
         <div className="flex items-center space-x-2">
-          <button 
-            className="nft-card w-11 h-11 flex items-center justify-center group"
-            onClick={() => setShowConnectors(!showConnectors)}
-            title="Wallet Connected"
-          >
-            <FontAwesomeIcon 
-              icon={faWallet} 
-              size="lg" 
-              className="text-green-400" 
-            />
-          </button>
+          <div className="flex flex-col items-center">
+            <button 
+              className="nft-card w-11 h-11 flex items-center justify-center group"
+              onClick={() => setShowConnectors(!showConnectors)}
+              title="Wallet Connected"
+            >
+              <FontAwesomeIcon 
+                icon={faWallet} 
+                size="lg" 
+                className="text-green-400" 
+              />
+            </button>
+            <span className="text-xs text-gray-400 mt-1 font-medium">my wallet</span>
+          </div>
           
           <div className="flex flex-col">
             <button
@@ -60,17 +63,20 @@ export function WalletConnection() {
 
   return (
     <div className="relative">
-      <button 
-        className="nft-card w-11 h-11 flex items-center justify-center group"
-        onClick={() => setShowConnectors(!showConnectors)}
-        aria-label="Connect wallet"
-      >
-        <FontAwesomeIcon 
-          icon={faPlug} 
-          size="lg" 
-          className="text-gray-400 group-hover:text-white transition-colors" 
-        />
-      </button>
+      <div className="flex flex-col items-center">
+        <button 
+          className="nft-card w-11 h-11 flex items-center justify-center group"
+          onClick={() => setShowConnectors(!showConnectors)}
+          aria-label="Connect wallet"
+        >
+          <FontAwesomeIcon 
+            icon={faPlug} 
+            size="lg" 
+            className="text-gray-400 group-hover:text-white transition-colors" 
+          />
+        </button>
+        <span className="text-xs text-gray-400 mt-1 font-medium">my wallet</span>
+      </div>
       
       {/* Connector Dropdown */}
       {showConnectors && (

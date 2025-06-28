@@ -3,7 +3,8 @@ import { Inter, Space_Grotesk } from "next/font/google";
 import "./globals.css";
 import { BottomNavigation } from "@/components/BottomNavigation";
 import { WalletProvider } from "@/components/WalletProvider";
-import { DemoBanner } from "@/components/DemoBanner";
+import { GalaxyBackground } from "@/components/GalaxyBackground";
+import { AppInitializer } from "@/components/AppInitializer";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -40,13 +41,15 @@ export default function RootLayout({
     <html lang="en" className={`${inter.variable} ${spaceGrotesk.variable}`}>
       <body className="font-sans text-white min-h-screen antialiased" style={{ backgroundColor: '#1f1334' }}>
         <WalletProvider>
-          <DemoBanner />
-          <div className="min-h-screen">
-            <main className="pb-28">
-              {children}
-            </main>
-          </div>
-          <BottomNavigation />
+          <AppInitializer>
+            <GalaxyBackground />
+            <div className="min-h-screen">
+              <main className="pb-28">
+                {children}
+              </main>
+            </div>
+            <BottomNavigation />
+          </AppInitializer>
         </WalletProvider>
       </body>
     </html>
