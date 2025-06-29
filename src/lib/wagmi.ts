@@ -17,28 +17,67 @@ const mainnetRpcUrl = DEMO_MODE
   ? (process.env.NEXT_PUBLIC_SEPOLIA_RPC_URL || 'https://eth-sepolia.public.blastapi.io')
   : (process.env.NEXT_PUBLIC_MAINNET_RPC_URL || 'https://eth-mainnet.alchemyapi.io/v2/demo')
 
-export const config = createConfig({
-  chains: DEMO_MODE ? [baseSepolia, sepolia] : [base, mainnet],
-  transports: DEMO_MODE ? {
-    [baseSepolia.id]: http(baseRpcUrl),
-    [sepolia.id]: http(mainnetRpcUrl),
-  } : {
-    [base.id]: http(baseRpcUrl),
-    [mainnet.id]: http(mainnetRpcUrl),
-  },
-  connectors: [
+// Create connectors with error handling
+const createConnectors = () => {
+  const connectors = [
     miniAppConnector(),
     injected(), // Browser wallets (MetaMask, Brave, etc.)
     metaMask(),
-    walletConnect({
-      projectId: process.env.NEXT_PUBLIC_WALLET_CONNECT_PROJECT_ID || 'demo-project-id',
-    }),
     coinbaseWallet({
       appName: 'StoryRipple',
       appLogoUrl: '/assets/icon.png',
     }),
-  ]
-})
+  ];
+
+  // Only add WalletConnect if we have a valid project ID and not in development hot reload
+  const walletConnectProjectId = process.env.NEXT_PUBLIC_WALLET_CONNECT_PROJECT_ID;
+  if (walletConnectProjectId && walletConnectProjectId !== 'demo-project-id') {
+    try {
+      connectors.push(
+        walletConnect({
+          projectId: walletConnectProjectId,
+          metadata: {
+            name: 'StoryRipple',
+            description: 'Collaborative branching stories',
+            url: typeof window !== 'undefined' ? window.location.origin : 'https://storyripple.com',
+            icons: ['/assets/icon.png']
+          },
+          showQrCodeModal: true,
+        })
+      );
+    } catch (error) {
+      console.warn('WalletConnect initialization skipped:', error);
+    }
+  }
+
+  return connectors;
+};
+
+// Singleton config to prevent multiple initializations
+let configInstance: ReturnType<typeof createConfig> | null = null;
+
+const createWagmiConfig = () => {
+  if (configInstance) {
+    return configInstance;
+  }
+
+  configInstance = createConfig({
+    chains: DEMO_MODE ? [baseSepolia, sepolia] : [base, mainnet],
+    transports: DEMO_MODE ? {
+      [baseSepolia.id]: http(baseRpcUrl),
+      [sepolia.id]: http(mainnetRpcUrl),
+    } : {
+      [base.id]: http(baseRpcUrl),
+      [mainnet.id]: http(mainnetRpcUrl),
+    },
+    connectors: createConnectors(),
+    ssr: true, // Enable SSR support
+  });
+
+  return configInstance;
+};
+
+export const config = createWagmiConfig();
 
 // Zora coins are primarily deployed on Base
 export const ZORA_CHAIN = DEMO_MODE ? baseSepolia : base

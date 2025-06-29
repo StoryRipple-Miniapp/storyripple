@@ -5,7 +5,6 @@ import { useState } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faBars, faHouseChimney, faRankingStar, faSquarePlus, faUser, faBookOpenReader } from '@fortawesome/free-solid-svg-icons';
 import { WalletConnection } from './WalletConnection';
-import { IS_DEMO_MODE } from '@/lib/wagmi';
 
 export function Header() {
   const pathname = usePathname();
@@ -31,6 +30,7 @@ export function Header() {
       case '/wallet':
         return 'Ripple Wallet';
       default:
+        if (path.startsWith('/ripple/')) return 'Story Ripples';
         return 'Story Ripple';
     }
   };
@@ -44,15 +44,18 @@ export function Header() {
   ];
 
   return (
-    <div className={`fixed left-0 w-full z-50 header-modern safe-area-top ${IS_DEMO_MODE ? 'top-10' : 'top-0'}`}>
+    <div className="fixed top-0 left-0 w-full z-[100] header-modern">
       <div className="flex items-center justify-between px-6 py-4 max-w-sm mx-auto md:max-w-none md:mx-0">
-        {/* Hamburger Menu */}
+        {/* Hamburger Menu with Motion */}
         <div className="flex-shrink-0 relative">
           <div className="flex flex-col items-center">
             <button
               aria-label="Menu"
               onClick={() => setShowMenu(!showMenu)}
-              className="nft-card w-11 h-11 flex items-center justify-center group"
+              className="nft-card w-11 h-11 flex items-center justify-center group hover:scale-110 transition-transform duration-200"
+              style={{
+                animation: 'menuPulse 2s infinite ease-in-out'
+              }}
             >
               <FontAwesomeIcon icon={faBars} size="lg" className="text-white" />
             </button>

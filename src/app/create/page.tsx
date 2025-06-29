@@ -87,76 +87,7 @@ export default function CreatePage() {
   };
 
   return (
-    <div className="min-h-screen font-rounded" style={{ backgroundColor: '#1f1334' }}>
-      {/* Improved galaxy/starfield background */}
-      <div className="pointer-events-none absolute inset-0 overflow-hidden">
-        {/* Large twinkling stars */}
-        {[...Array(15)].map((_, i) => (
-          <span
-            key={`large-${i}`}
-            className="absolute block bg-white rounded-full"
-            style={{
-              width: '2px',
-              height: '2px',
-              top: `${Math.random() * 100}%`,
-              left: `${Math.random() * 100}%`,
-              animation: `twinkle ${Math.random() * 4 + 3}s ease-in-out infinite`,
-              animationDelay: `${Math.random() * 2}s`,
-            }}
-          />
-        ))}
-        
-        {/* Medium floating stars */}
-        {[...Array(25)].map((_, i) => (
-          <span
-            key={`medium-${i}`}
-            className="absolute block bg-white rounded-full"
-            style={{
-              width: '1.5px',
-              height: '1.5px',
-              top: `${Math.random() * 100}%`,
-              left: `${Math.random() * 100}%`,
-              animation: `galaxyFloat ${Math.random() * 6 + 4}s ease-in-out infinite`,
-              animationDelay: `${Math.random() * 3}s`,
-              opacity: Math.random() * 0.6 + 0.2,
-            }}
-          />
-        ))}
-        
-        {/* Small pulsing stars */}
-        {[...Array(40)].map((_, i) => (
-          <span
-            key={`small-${i}`}
-            className="absolute block bg-white rounded-full"
-            style={{
-              width: '1px',
-              height: '1px',
-              top: `${Math.random() * 100}%`,
-              left: `${Math.random() * 100}%`,
-              animation: `starPulse ${Math.random() * 5 + 2}s ease-in-out infinite`,
-              animationDelay: `${Math.random() * 4}s`,
-              opacity: Math.random() * 0.4 + 0.1,
-            }}
-          />
-        ))}
-        
-        {/* Tiny distant stars */}
-        {[...Array(60)].map((_, i) => (
-          <span
-            key={`tiny-${i}`}
-            className="absolute block bg-white rounded-full opacity-30"
-            style={{
-              width: '0.5px',
-              height: '0.5px',
-              top: `${Math.random() * 100}%`,
-              left: `${Math.random() * 100}%`,
-              animation: `twinkle ${Math.random() * 8 + 6}s ease-in-out infinite`,
-              animationDelay: `${Math.random() * 5}s`,
-            }}
-          />
-        ))}
-      </div>
-      
+    <div className="min-h-screen font-rounded page-content" style={{ backgroundColor: '#1f1334' }}>
       <Header />
       
       <div className="px-4 py-6 space-y-5 relative z-10 max-w-sm mx-auto overflow-y-auto scrollbar-hide">

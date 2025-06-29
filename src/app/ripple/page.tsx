@@ -94,79 +94,10 @@ export default function RipplePage() {
   };
 
   return (
-    <div className="min-h-screen font-rounded" style={{ backgroundColor: '#1f1334' }}>
-      {/* Improved galaxy/starfield background */}
-      <div className="pointer-events-none absolute inset-0 overflow-hidden">
-        {/* Large twinkling stars */}
-        {[...Array(15)].map((_, i) => (
-          <span
-            key={`large-${i}`}
-            className="absolute block bg-white rounded-full"
-            style={{
-              width: '2px',
-              height: '2px',
-              top: `${Math.random() * 100}%`,
-              left: `${Math.random() * 100}%`,
-              animation: `twinkle ${Math.random() * 4 + 3}s ease-in-out infinite`,
-              animationDelay: `${Math.random() * 2}s`,
-            }}
-          />
-        ))}
-        
-        {/* Medium floating stars */}
-        {[...Array(25)].map((_, i) => (
-          <span
-            key={`medium-${i}`}
-            className="absolute block bg-white rounded-full"
-            style={{
-              width: '1.5px',
-              height: '1.5px',
-              top: `${Math.random() * 100}%`,
-              left: `${Math.random() * 100}%`,
-              animation: `galaxyFloat ${Math.random() * 6 + 4}s ease-in-out infinite`,
-              animationDelay: `${Math.random() * 3}s`,
-              opacity: Math.random() * 0.6 + 0.2,
-            }}
-          />
-        ))}
-        
-        {/* Small pulsing stars */}
-        {[...Array(40)].map((_, i) => (
-          <span
-            key={`small-${i}`}
-            className="absolute block bg-white rounded-full"
-            style={{
-              width: '1px',
-              height: '1px',
-              top: `${Math.random() * 100}%`,
-              left: `${Math.random() * 100}%`,
-              animation: `starPulse ${Math.random() * 5 + 2}s ease-in-out infinite`,
-              animationDelay: `${Math.random() * 4}s`,
-              opacity: Math.random() * 0.4 + 0.1,
-            }}
-          />
-        ))}
-        
-        {/* Tiny distant stars */}
-        {[...Array(60)].map((_, i) => (
-          <span
-            key={`tiny-${i}`}
-            className="absolute block bg-white rounded-full opacity-30"
-            style={{
-              width: '0.5px',
-              height: '0.5px',
-              top: `${Math.random() * 100}%`,
-              left: `${Math.random() * 100}%`,
-              animation: `twinkle ${Math.random() * 8 + 6}s ease-in-out infinite`,
-              animationDelay: `${Math.random() * 5}s`,
-            }}
-          />
-        ))}
-      </div>
-
+    <div className="min-h-screen font-rounded page-content" style={{ backgroundColor: '#1f1334' }}>
       <Header />
       
-      <div className="px-4 py-6 space-y-4 relative z-10 max-w-sm mx-auto pt-28 pb-32">
+      <div className="px-4 py-6 space-y-4 relative z-10 max-w-sm mx-auto">
         {/* Page Title */}
         <div className="text-center mb-6">
           <h1 className="text-2xl font-display font-bold text-white">Ripple</h1>
@@ -252,43 +183,41 @@ export default function RipplePage() {
         </div>
 
         {/* Create Ripple Section */}
-        <div className="fixed bottom-20 left-0 right-0 bg-black/80 backdrop-blur-lg border-t border-gray-600 p-4">
-          <div className="max-w-sm mx-auto">
-            <div className="mb-3">
-              <h3 className="text-white font-display font-medium text-lg mb-2">Create a Ripple*</h3>
-              <div className="bg-purple-900/40 border border-purple-400 rounded-lg px-3 py-2 inline-block">
-                <span className="text-purple-300 text-sm">⚠ Requires 0.50 RIPPLES</span>
+        <div className="bg-black/80 backdrop-blur-lg border border-gray-600 rounded-xl p-4 mt-6">
+          <div className="mb-3">
+            <h3 className="text-white font-display font-medium text-lg mb-2">Create a Ripple</h3>
+            <div className="bg-purple-900/40 border border-purple-400 rounded-lg px-3 py-2 inline-block">
+              <span className="text-purple-300 text-sm">⚠ Requires 0.50 RIPPLES</span>
+            </div>
+          </div>
+
+          <div className="space-y-3">
+            <div className="relative">
+              <textarea
+                value={newRipple}
+                onChange={(e) => setNewRipple(e.target.value)}
+                placeholder="Enter your text here... ✏️"
+                className="w-full bg-gray-800/50 border border-gray-600 rounded-lg p-3 text-gray-300 placeholder-gray-500 resize-none focus:outline-none focus:border-purple-400 transition-colors"
+                rows={3}
+                maxLength={100}
+              />
+              <div className="absolute bottom-2 right-2 text-xs text-gray-500">
+                {newRipple.length}/100
               </div>
             </div>
 
-            <div className="space-y-3">
-              <div className="relative">
-                <textarea
-                  value={newRipple}
-                  onChange={(e) => setNewRipple(e.target.value)}
-                  placeholder="Enter your text here... ✏️"
-                  className="w-full bg-gray-800/50 border border-gray-600 rounded-lg p-3 text-gray-300 placeholder-gray-500 resize-none focus:outline-none focus:border-purple-400 transition-colors"
-                  rows={3}
-                  maxLength={100}
-                />
-                <div className="absolute bottom-2 right-2 text-gray-500 text-xs">
-                  {newRipple.length}/100
-                </div>
+            <div className="flex justify-between items-center">
+              <div className="flex items-center space-x-2">
+                <FontAwesomeIcon icon={faEdit} className="text-purple-400 text-sm" />
+                <span className="text-purple-300 text-sm">Add your twist to the story</span>
               </div>
-
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-2">
-                  <input type="checkbox" className="rounded" defaultChecked />
-                  <span className="text-gray-400 text-sm">Gas Fee of 0.50 RIPPLE will be incurred</span>
-                </div>
-              </div>
-
+              
               <button
                 onClick={handleCreateRipple}
                 disabled={!newRipple.trim()}
-                className="w-full bg-purple-600 hover:bg-purple-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white py-3 px-6 rounded-full font-display font-medium transition-colors"
+                className="btn-primary disabled:opacity-50 disabled:cursor-not-allowed text-sm px-4 py-2"
               >
-                POST YOUR RIPPLE*
+                Create Ripple
               </button>
             </div>
           </div>

@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import { SplashScreen } from './SplashScreen';
 
 interface AppInitializerProps {
@@ -11,6 +11,7 @@ interface AppInitializerProps {
 export function AppInitializer({ children }: AppInitializerProps) {
   const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
+  const pathname = usePathname();
 
   useEffect(() => {
     // Preload critical pages for faster navigation
@@ -25,7 +26,7 @@ export function AppInitializer({ children }: AppInitializerProps) {
         router.prefetch('/wallet');
 
         // Simulate minimum loading time for smooth UX
-        await new Promise(resolve => setTimeout(resolve, 2000));
+        await new Promise(resolve => setTimeout(resolve, 1000));
       } catch (error) {
         console.log('Preloading completed with some pages skipped');
       }
@@ -36,6 +37,10 @@ export function AppInitializer({ children }: AppInitializerProps) {
 
   const handleLoadingComplete = () => {
     setIsLoading(false);
+    // Navigate to feeds page if we're on the home page
+    if (pathname === '/') {
+      router.push('/feeds');
+    }
   };
 
   if (isLoading) {

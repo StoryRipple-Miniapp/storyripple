@@ -6,83 +6,103 @@ interface Star {
   id: number;
   x: number;
   y: number;
-  size: 'small' | 'medium' | 'large';
-  type: 'normal' | 'constellation' | 'meteor';
+  size: number;
+  opacity: number;
+  delay: number;
+}
+
+interface ShootingStar {
+  id: number;
+  startX: number;
+  startY: number;
+  endX: number;
+  endY: number;
   delay: number;
 }
 
 export function GalaxyBackground() {
   const [stars, setStars] = useState<Star[]>([]);
+  const [shootingStars, setShootingStars] = useState<ShootingStar[]>([]);
 
   useEffect(() => {
     const generateStars = () => {
       const newStars: Star[] = [];
       
-      // Generate normal stars
-      for (let i = 0; i < 150; i++) {
+      // Generate fewer stars for better performance
+      for (let i = 0; i < 80; i++) {
         newStars.push({
           id: i,
           x: Math.random() * 100,
           y: Math.random() * 100,
-          size: Math.random() > 0.7 ? 'large' : Math.random() > 0.4 ? 'medium' : 'small',
-          type: 'normal',
+          size: Math.random() * 2 + 1,
+          opacity: Math.random() * 0.8 + 0.2,
           delay: Math.random() * 5,
         });
       }
-
-      // Generate constellation stars
-      for (let i = 150; i < 165; i++) {
-        newStars.push({
-          id: i,
-          x: Math.random() * 100,
-          y: Math.random() * 100,
-          size: 'medium',
-          type: 'constellation',
-          delay: Math.random() * 15,
-        });
-      }
-
-      // Generate meteors
-      for (let i = 165; i < 170; i++) {
-        newStars.push({
-          id: i,
-          x: Math.random() * 100,
-          y: Math.random() * 100,
-          size: 'small',
-          type: 'meteor',
-          delay: Math.random() * 30 + 10, // Meteors appear less frequently
-        });
-      }
-
+      
       setStars(newStars);
     };
 
+    const generateShootingStars = () => {
+      const newShootingStars: ShootingStar[] = [];
+      
+      // Generate occasional shooting stars
+      for (let i = 0; i < 3; i++) {
+        const startX = Math.random() * 100;
+        const startY = Math.random() * 50;
+        newShootingStars.push({
+          id: i,
+          startX,
+          startY,
+          endX: startX + 20 + Math.random() * 30,
+          endY: startY + 20 + Math.random() * 30,
+          delay: Math.random() * 10 + 5,
+        });
+      }
+      
+      setShootingStars(newShootingStars);
+    };
+
     generateStars();
+    generateShootingStars();
   }, []);
 
   return (
-    <div className="galaxy-container">
-      {stars.map((star) => {
-        const className = `star-3d ${star.size === 'large' ? 'star-large' : star.size === 'medium' ? 'star-medium' : 'star-small'} ${
-          star.type === 'constellation' ? 'constellation-star' : ''
-        } ${star.type === 'meteor' ? 'meteor' : ''}`;
-
-        return (
-          <div
-            key={star.id}
-            className={className}
-            style={{
-              left: `${star.x}%`,
-              top: `${star.y}%`,
-              animationDelay: `${star.delay}s`,
-            }}
-          />
-        );
-      })}
+    <div className="galaxy-container-2d">
+      {/* Regular twinkling stars */}
+      {stars.map((star) => (
+        <div
+          key={star.id}
+          className="star-2d"
+          style={{
+            left: `${star.x}%`,
+            top: `${star.y}%`,
+            width: `${star.size}px`,
+            height: `${star.size}px`,
+            opacity: star.opacity,
+            animationDelay: `${star.delay}s`,
+          }}
+        />
+      ))}
       
-      {/* Additional atmospheric effects */}
-      <div className="absolute inset-0 bg-gradient-to-b from-transparent via-purple-900/5 to-transparent pointer-events-none" />
-      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-blue-900/3 to-transparent pointer-events-none" />
+      {/* Shooting stars */}
+      {shootingStars.map((shootingStar) => (
+        <div
+          key={`shooting-${shootingStar.id}`}
+          className="shooting-star"
+          style={{
+            left: `${shootingStar.startX}%`,
+            top: `${shootingStar.startY}%`,
+            '--end-x': `${shootingStar.endX - shootingStar.startX}%`,
+            '--end-y': `${shootingStar.endY - shootingStar.startY}%`,
+            animationDelay: `${shootingStar.delay}s`,
+          } as React.CSSProperties}
+        />
+      ))}
+      
+      {/* Subtle background gradients */}
+      <div className="absolute inset-0 bg-gradient-to-b from-transparent via-purple-900/3 to-transparent pointer-events-none" />
+      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-blue-900/2 to-transparent pointer-events-none" />
     </div>
   );
 } 

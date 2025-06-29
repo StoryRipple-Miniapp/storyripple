@@ -1,7 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Inter, Space_Grotesk } from "next/font/google";
 import "./globals.css";
-import { BottomNavigation } from "@/components/BottomNavigation";
 import { WalletProvider } from "@/components/WalletProvider";
 import { GalaxyBackground } from "@/components/GalaxyBackground";
 import { AppInitializer } from "@/components/AppInitializer";
@@ -44,11 +43,10 @@ export default function RootLayout({
           <AppInitializer>
             <GalaxyBackground />
             <div className="min-h-screen">
-              <main className="pb-28">
+              <main className="pb-8">
                 {children}
               </main>
             </div>
-            <BottomNavigation />
           </AppInitializer>
         </WalletProvider>
       </body>

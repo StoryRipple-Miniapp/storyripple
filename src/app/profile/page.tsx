@@ -577,15 +577,12 @@ export default function ProfilePage() {
   // ============================================================================
 
   return (
-    <div className="min-h-screen font-rounded" style={{ backgroundColor: '#1f1334' }}>
-      {/* Galaxy Background */}
-      {renderGalaxyBackground()}
-
+    <div className="min-h-screen font-rounded page-content" style={{ backgroundColor: '#1f1334' }}>
       {/* Header */}
       <Header />
       
       {/* Main Content */}
-      <div className="px-4 py-6 space-y-6 relative z-10 max-w-sm mx-auto pt-28 pb-32">
+      <div className="px-4 py-6 space-y-6 relative z-10 max-w-sm mx-auto">
         
         {/* Tab Navigation */}
         {renderTabButtons()}

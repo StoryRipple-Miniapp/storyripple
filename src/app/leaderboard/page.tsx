@@ -6,10 +6,10 @@ import { faTrophy, faUsers, faChartLine } from '@fortawesome/free-solid-svg-icon
 
 export default function LeaderboardPage() {
   return (
-    <div className="min-h-screen font-rounded" style={{ backgroundColor: '#1f1334' }}>
+    <div className="min-h-screen font-rounded page-content" style={{ backgroundColor: '#1f1334' }}>
       <Header />
       
-      <div className="px-4 py-6 space-y-6 relative z-10 max-w-sm mx-auto pt-28 pb-32">
+      <div className="px-4 py-6 space-y-6 relative z-10 max-w-sm mx-auto">
         
         {/* Empty State */}
         <div className="text-center py-16 space-y-6">
