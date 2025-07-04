@@ -17,6 +17,14 @@ const nextConfig: NextConfig = {
       {
         protocol: 'https',
         hostname: 'img.clerk.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'via.placeholder.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'images.unsplash.com',
       }
     ],
     minimumCacheTTL: 3600,
@@ -56,8 +64,8 @@ const nextConfig: NextConfig = {
           {
             key: 'Content-Security-Policy',
             value: process.env.NODE_ENV === 'development' 
-              ? "default-src 'self'; script-src 'self' 'unsafe-eval' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:;"
-              : "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:;"
+              ? "default-src 'self'; connect-src 'self' https://metamask-sdk.api.cx.metamask.io https://cloud.walletconnect.com https://*.walletconnect.com; script-src 'self' 'unsafe-eval' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:;"
+              : "default-src 'self'; connect-src 'self' https://metamask-sdk.api.cx.metamask.io https://cloud.walletconnect.com https://*.walletconnect.com; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:;"
           }
         ],
       },

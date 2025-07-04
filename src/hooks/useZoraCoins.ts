@@ -267,29 +267,63 @@ export function useZoraCoins() {
     }
   }, [])
 
-  // Get user's coin balances - Real implementation would query blockchain
+  // Get user's coin balances - Real implementation
   const getUserCoinBalances = useCallback(async (): Promise<CoinBalance[]> => {
     if (!address || !publicClient) {
       return []
     }
 
+    setIsLoading(true)
+    setError(null)
+
     try {
-      setError(null)
-      
-      // TODO: Implement real balance querying
-      // This would require:
-      // 1. Tracking which coins the user has interacted with
-      // 2. Querying ERC20 balanceOf for each coin
-      // 3. Getting current prices for value calculation
-      
-      // For now, return empty array
-      console.log('getUserCoinBalances: Real implementation pending')
-      
-      return []
+      // 1. Fetch all Zora coins on Base Sepolia via Zora API
+      const coinsResponse = await getCoins({
+        chain: ZORA_CHAIN.id,
+        limit: 100, // adjust as needed
+      })
+      const coins = coinsResponse.data?.zora20Tokens?.nodes || []
+
+      // 2. For each coin, check the user's ERC20 balance
+      const balances: CoinBalance[] = []
+      for (const coin of coins) {
+        if (!coin?.address) continue
+        try {
+          const balance = await publicClient.readContract({
+            address: coin.address as Address,
+            abi: [
+              {
+                "constant": true,
+                "inputs": [{ "name": "account", "type": "address" }],
+                "name": "balanceOf",
+                "outputs": [{ "name": "", "type": "uint256" }],
+                "type": "function"
+              }
+            ],
+            functionName: 'balanceOf',
+            args: [address],
+          }) as bigint
+
+          if (balance && balance > 0n) {
+            balances.push({
+              coinAddress: coin.address,
+              balance: balance.toString(),
+              symbol: coin.symbol || 'ZORA',
+              name: coin.name || '',
+              value: '0', // Value will be calculated in the component
+            })
+          }
+        } catch (err) {
+          // Ignore errors for coins the user doesn't own
+        }
+      }
+      return balances
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to get balances'
       setError(errorMessage)
       return []
+    } finally {
+      setIsLoading(false)
     }
   }, [address, publicClient])
 

@@ -12,6 +12,11 @@ export default function Head() {
           homeUrl: "https://your-deployed-url.com"
         })}
       />
+      {/* Update the icon and preview image references */}
+      <link rel="icon" href="/assets/icon.png" />
+      <meta name="description" content="Control the narrative of every story" />
+      <meta property="og:image" content="/assets/preview-1200x800.png" />
+      <meta property="twitter:image" content="/assets/preview-1200x800.png" />
     </>
   );
 } 

@@ -21,7 +21,7 @@ const mainnetRpcUrl = DEMO_MODE
 const createConnectors = () => {
   const connectors = [
     miniAppConnector(),
-    injected(), // Browser wallets (MetaMask, Brave, etc.)
+    injected(), // This will detect Phantom, Rainbow, and other injected wallets
     metaMask(),
     coinbaseWallet({
       appName: 'StoryRipple',
@@ -42,7 +42,7 @@ const createConnectors = () => {
             url: typeof window !== 'undefined' ? window.location.origin : 'https://storyripple.com',
             icons: ['/assets/icon.png']
           },
-          showQrCodeModal: true,
+          showQrModal: true,
         })
       );
     } catch (error) {
@@ -62,13 +62,11 @@ const createWagmiConfig = () => {
   }
 
   configInstance = createConfig({
-    chains: DEMO_MODE ? [baseSepolia, sepolia] : [base, mainnet],
+    chains: DEMO_MODE ? [baseSepolia] : [base], // Only allow Base Sepolia (testnet) or Base (mainnet)
     transports: DEMO_MODE ? {
       [baseSepolia.id]: http(baseRpcUrl),
-      [sepolia.id]: http(mainnetRpcUrl),
     } : {
       [base.id]: http(baseRpcUrl),
-      [mainnet.id]: http(mainnetRpcUrl),
     },
     connectors: createConnectors(),
     ssr: true, // Enable SSR support

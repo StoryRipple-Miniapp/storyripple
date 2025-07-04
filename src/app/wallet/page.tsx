@@ -1,7 +1,7 @@
 'use client';
 
 import { Header } from '@/components/Header';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faLightbulb, faEye, faEyeSlash, faCopy, faSpinner } from '@fortawesome/free-solid-svg-icons';
 import { useAccount, useConnect, useBalance } from 'wagmi';
@@ -14,12 +14,30 @@ export default function WalletPage() {
   const { data: balance } = useBalance({
     address: address,
   });
-  const { isLoading: zoraLoading, error: zoraError } = useZoraCoins();
+  const { isLoading: zoraLoading, error: zoraError, getUserCoinBalances } = useZoraCoins();
   
   const [termsAccepted, setTermsAccepted] = useState(false);
   const [isCreatingWallet, setIsCreatingWallet] = useState(false);
   const [showFullAddress, setShowFullAddress] = useState(false);
   const [copySuccess, setCopySuccess] = useState(false);
+  const [coinBalances, setCoinBalances] = useState<any[]>([]);
+  const [loadingBalances, setLoadingBalances] = useState(false);
+  
+  // Load coin balances when wallet is connected
+  useEffect(() => {
+    if (isConnected && address) {
+      setLoadingBalances(true);
+      getUserCoinBalances().then((balances) => {
+        setCoinBalances(balances);
+        setLoadingBalances(false);
+      });
+    }
+  }, [isConnected, address, getUserCoinBalances]);
+  
+  const handleAddFunds = () => {
+    // Open Base Sepolia faucet in new window
+    window.open('https://faucet.quicknode.com/base/sepolia', '_blank');
+  };
   
   const fullWalletAddress = address || "0x0000000000000000000000000000000000000000";
   const shortWalletAddress = address 
@@ -109,7 +127,7 @@ export default function WalletPage() {
 
       <Header />
       
-      <div className="px-4 py-6 space-y-5 relative z-10 max-w-sm mx-auto overflow-y-auto scrollbar-hide">
+      <div className="px-4 py-6 space-y-5 relative z-10 max-w-sm mx-auto overflow-y-auto scrollbar-hide pt-24">
         {/* Top Right Ripples Display */}
         <div className="flex justify-end">
           <div className="inline-flex items-center space-x-2 bg-black/30 backdrop-blur-md border border-[#5646a6]/40 rounded-full px-4 py-2 shadow-lg">
@@ -176,11 +194,35 @@ export default function WalletPage() {
         {isConnected && (
           <div className="space-y-2">
             <h3 className="text-white text-sm font-medium font-display">Story Coin Balances</h3>
-            <div className="bg-black/30 backdrop-blur-md border border-[#5646a6] rounded-xl p-4 text-center">
-              <p className="text-gray-400 text-sm">
-                Coin balances will appear here once you own story coins
-              </p>
-            </div>
+            {loadingBalances ? (
+              <div className="bg-black/30 backdrop-blur-md border border-[#5646a6] rounded-xl p-4 text-center">
+                <FontAwesomeIcon icon={faSpinner} className="animate-spin text-purple-400 mb-2" />
+                <p className="text-gray-400 text-sm">Loading coin balances...</p>
+              </div>
+            ) : coinBalances.length > 0 ? (
+              <div className="space-y-2">
+                {coinBalances.map((coin, index) => (
+                  <div key={index} className="bg-black/30 backdrop-blur-md border border-[#5646a6] rounded-xl p-4">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <div className="text-white font-medium text-sm">{coin.symbol}</div>
+                        <div className="text-gray-400 text-xs">{coin.name}</div>
+                      </div>
+                      <div className="text-right">
+                        <div className="text-white font-medium text-sm">{parseFloat(coin.balance).toFixed(0)}</div>
+                        <div className="text-gray-400 text-xs">{coin.value} ETH</div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="bg-black/30 backdrop-blur-md border border-[#5646a6] rounded-xl p-4 text-center">
+                <p className="text-gray-400 text-sm">
+                  No story coins found. Create stories with coins to see them here!
+                </p>
+              </div>
+            )}
           </div>
         )}
 
@@ -240,7 +282,10 @@ export default function WalletPage() {
                 <span>Wallet Connected</span>
               </button>
               
-              <button className="flex-1 bg-black/20 backdrop-blur-md border border-[#3f3379] text-white px-4 py-2 rounded-full font-display font-medium text-xs hover:bg-black/30 transition-all shadow-lg whitespace-nowrap">
+              <button 
+                onClick={handleAddFunds}
+                className="flex-1 bg-black/20 backdrop-blur-md border border-[#3f3379] text-white px-4 py-2 rounded-full font-display font-medium text-xs hover:bg-black/30 transition-all shadow-lg whitespace-nowrap"
+              >
                 Add funds
               </button>
             </>

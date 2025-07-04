@@ -3,13 +3,16 @@
 import { usePathname, useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faBars, faHouseChimney, faRankingStar, faSquarePlus, faUser, faBookOpenReader } from '@fortawesome/free-solid-svg-icons';
+import { faBars, faHouseChimney, faRankingStar, faSquarePlus, faUser, faBookOpenReader, faWallet } from '@fortawesome/free-solid-svg-icons';
 import { WalletConnection } from './WalletConnection';
+import { useAccount, useBalance } from 'wagmi';
 
 export function Header() {
   const pathname = usePathname();
   const router = useRouter();
   const [showMenu, setShowMenu] = useState(false);
+  const { address, isConnected } = useAccount();
+  const { data: balance } = useBalance({ address });
   
   const getPageName = (path: string | null) => {
     if (!path) return 'Story Ripple';
@@ -37,10 +40,9 @@ export function Header() {
 
   const menuItems = [
     { icon: faHouseChimney, path: '/feeds', label: 'Feeds' },
-    { icon: faRankingStar, path: '/leaderboard', label: 'Leaderboard' },
     { icon: faSquarePlus, path: '/create', label: 'Create' },
     { icon: faUser, path: '/profile', label: 'Profile' },
-    { icon: faBookOpenReader, path: '/rules', label: 'Rules' },
+    { icon: faWallet, path: '/wallet', label: 'Wallet' },
   ];
 
   return (

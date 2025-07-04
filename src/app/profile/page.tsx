@@ -582,7 +582,7 @@ export default function ProfilePage() {
       <Header />
       
       {/* Main Content */}
-      <div className="px-4 py-6 space-y-6 relative z-10 max-w-sm mx-auto">
+      <div className="px-4 py-6 space-y-6 relative z-10 max-w-sm mx-auto pt-24">
         
         {/* Tab Navigation */}
         {renderTabButtons()}

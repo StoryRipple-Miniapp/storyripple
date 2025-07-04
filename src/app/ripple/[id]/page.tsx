@@ -1,11 +1,12 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import { Header } from '@/components/Header';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faArrowUp, faEdit, faWarning, faBookOpen } from '@fortawesome/free-solid-svg-icons';
 import Image from 'next/image';
+import { GalaxyBackground } from '@/components/GalaxyBackground';
 
 interface Ripple {
   id: number;
@@ -20,7 +21,7 @@ interface Ripple {
 
 export default function StoryRipplePage() {
   const params = useParams();
-  const storyId = params.id as string;
+  const storyId = params?.id as string;
   
   // Mock original stories data - in real app this would come from API
   const originalStories: {[key: string]: any} = {
@@ -81,6 +82,29 @@ export default function StoryRipplePage() {
 
   const [newRipple, setNewRipple] = useState('');
   const [rippleCount, setRippleCount] = useState(12);
+  
+  // Add state to track created ripples
+  const [userCreatedRipples, setUserCreatedRipples] = useState<Ripple[]>([]);
+
+  // Load user created ripples from localStorage
+  useEffect(() => {
+    const loadUserRipples = () => {
+      try {
+        const storedRipples = localStorage.getItem(`userCreatedRipples_${storyId}`);
+        if (storedRipples) {
+          const parsedRipples = JSON.parse(storedRipples);
+          setUserCreatedRipples(parsedRipples);
+        }
+      } catch (error) {
+        console.error('Error loading user ripples:', error);
+      }
+    };
+
+    loadUserRipples();
+  }, [storyId]);
+
+  // Combine ripples with user created ripples
+  const allRipples = [...userCreatedRipples, ...ripples];
 
   const handleUpvote = (id: number) => {
     setRipples(ripples.map(ripple => 
@@ -98,7 +122,7 @@ export default function StoryRipplePage() {
     if (!newRipple.trim()) return;
     
     const newRippleObj: Ripple = {
-      id: ripples.length + 1,
+      id: Date.now(), // Use timestamp as unique ID
       author: 'You',
       username: '@You',
       avatar: 'https://picsum.photos/seed/you/40/40',
@@ -108,16 +132,30 @@ export default function StoryRipplePage() {
       isExpanded: false
     };
     
-    setRipples([newRippleObj, ...ripples]);
+    // Add to user created ripples
+    const updatedUserRipples = [newRippleObj, ...userCreatedRipples];
+    setUserCreatedRipples(updatedUserRipples);
+    
+    // Store in localStorage
+    localStorage.setItem(`userCreatedRipples_${storyId}`, JSON.stringify(updatedUserRipples));
+    
     setNewRipple('');
     setRippleCount(rippleCount - 1);
   };
 
+  // Alert styling for error messages
+  const Alert = ({ message }: { message: string }) => (
+    <div className="w-full bg-[#2a0d18] border-l-4 border-[#ff3b3b] text-[#ff3b3b] rounded-b-xl px-4 py-3 mt-0 mb-2 font-medium text-base">
+      {message}
+    </div>
+  );
+
   return (
     <div className="min-h-screen font-rounded page-content" style={{ backgroundColor: '#1f1334' }}>
+      <GalaxyBackground />
       <Header />
       
-      <div className="px-4 py-6 space-y-4 relative z-10 max-w-lg mx-auto">
+      <div className="px-4 py-6 space-y-4 relative z-10 max-w-lg mx-auto pt-24">
         {/* Original Story */}
         <div className="bg-gradient-to-r from-purple-900/50 to-blue-900/50 border border-purple-400 rounded-xl p-6 mb-6">
           <div className="flex items-center space-x-2 mb-4">
@@ -167,8 +205,8 @@ export default function StoryRipplePage() {
 
         {/* Story Ripples */}
         <div className="space-y-4">
-          <h2 className="text-lg font-bold text-white mb-4">Story Continuations ({ripples.length})</h2>
-          {ripples.map((ripple) => (
+          <h2 className="text-lg font-bold text-white mb-4">Story Continuations ({allRipples.length})</h2>
+          {allRipples.map((ripple) => (
             <div
               key={ripple.id}
               className="bg-black/40 backdrop-blur-md border border-gray-600 rounded-xl overflow-hidden relative group hover:border-purple-400 transition-all"

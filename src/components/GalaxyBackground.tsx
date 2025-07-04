@@ -28,14 +28,14 @@ export function GalaxyBackground() {
     const generateStars = () => {
       const newStars: Star[] = [];
       
-      // Generate fewer stars for better performance
-      for (let i = 0; i < 80; i++) {
+      // Generate many more stars for better visual effect
+      for (let i = 0; i < 150; i++) {
         newStars.push({
           id: i,
           x: Math.random() * 100,
           y: Math.random() * 100,
-          size: Math.random() * 2 + 1,
-          opacity: Math.random() * 0.8 + 0.2,
+          size: Math.random() * 2 + 0.5,
+          opacity: Math.random() * 0.8 + 0.1,
           delay: Math.random() * 5,
         });
       }
@@ -46,8 +46,8 @@ export function GalaxyBackground() {
     const generateShootingStars = () => {
       const newShootingStars: ShootingStar[] = [];
       
-      // Generate occasional shooting stars
-      for (let i = 0; i < 3; i++) {
+      // Generate more shooting stars for dynamic effect
+      for (let i = 0; i < 5; i++) {
         const startX = Math.random() * 100;
         const startY = Math.random() * 50;
         newShootingStars.push({
@@ -56,7 +56,7 @@ export function GalaxyBackground() {
           startY,
           endX: startX + 20 + Math.random() * 30,
           endY: startY + 20 + Math.random() * 30,
-          delay: Math.random() * 10 + 5,
+          delay: Math.random() * 10 + 2,
         });
       }
       

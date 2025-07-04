@@ -3,7 +3,7 @@
 import { usePathname, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faHouseChimney, faBookOpenReader, faRankingStar, faUser, faSquarePlus } from '@fortawesome/free-solid-svg-icons';
+import { faHouseChimney, faBookOpenReader, faRankingStar, faUser, faSquarePlus, faWallet } from '@fortawesome/free-solid-svg-icons';
 
 export function BottomNavigation() {
   const pathname = usePathname();
@@ -48,9 +48,7 @@ export function BottomNavigation() {
 
   const navItems = [
     { icon: faHouseChimney, path: '/feeds', label: 'Home' },
-    { icon: faRankingStar, path: '/leaderboard', label: 'Rank' },
-    { icon: faSquarePlus, path: '/create', label: 'Create', isCenter: true },
-    { icon: faBookOpenReader, path: '/rules', label: 'Rules' },
+    { icon: faWallet, path: '/wallet', label: 'Wallet' },
     { icon: faUser, path: '/profile', label: 'Profile', hasNotification: hasNewAchievements },
   ];
 

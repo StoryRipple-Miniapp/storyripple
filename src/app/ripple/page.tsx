@@ -97,7 +97,7 @@ export default function RipplePage() {
     <div className="min-h-screen font-rounded page-content" style={{ backgroundColor: '#1f1334' }}>
       <Header />
       
-      <div className="px-4 py-6 space-y-4 relative z-10 max-w-sm mx-auto">
+      <div className="px-4 py-6 space-y-4 relative z-10 max-w-sm mx-auto pt-24">
         {/* Page Title */}
         <div className="text-center mb-6">
           <h1 className="text-2xl font-display font-bold text-white">Ripple</h1>

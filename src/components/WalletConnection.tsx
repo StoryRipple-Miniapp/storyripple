@@ -1,61 +1,56 @@
 'use client'
 
 import { useState } from 'react'
-import { useAccount, useConnect, useDisconnect } from 'wagmi'
+import { useAccount, useConnect, useDisconnect, useBalance } from 'wagmi'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faWallet, faPlug, faExclamationTriangle, faGlobe } from '@fortawesome/free-solid-svg-icons'
+import { faWallet, faPlug, faExclamationTriangle, faGlobe, faGhost } from '@fortawesome/free-solid-svg-icons'
 import { IS_DEMO_MODE } from '@/lib/wagmi'
 import { getWalletLogo } from '@/lib/wallet-logos'
 import Image from 'next/image'
+import { useRouter } from 'next/navigation'
+import phantomLogo from '/public/assets/wallets/phantom.svg';
 
 export function WalletConnection() {
   const { address, isConnected, chain } = useAccount()
   const { connectors, connect, isPending } = useConnect()
   const { disconnect } = useDisconnect()
+  const { data: balance } = useBalance({ address })
   const [showConnectors, setShowConnectors] = useState(false)
+  const router = useRouter()
 
   const isTestnet = chain?.testnet || IS_DEMO_MODE
+
+  const handleWalletClick = () => {
+    setShowConnectors(true);
+    router.push('/wallet');
+  }
 
   if (isConnected) {
     return (
       <div className="flex items-center space-x-2">
-        {/* Testnet Indicator */}
-        {isTestnet && (
-          <div className="flex items-center space-x-1 px-2 py-1 bg-orange-500/20 border border-orange-500/30 rounded-lg">
-            <FontAwesomeIcon icon={faExclamationTriangle} className="text-orange-400 text-xs" />
-            <span className="text-orange-400 text-xs font-medium">TESTNET</span>
+        {/* Connected Wallet - Mobile Friendly */}
+        <button 
+          className="nft-card w-11 h-11 flex items-center justify-center group"
+          onClick={handleWalletClick}
+          title="Open Wallet"
+        >
+          <FontAwesomeIcon icon={faGhost} size="lg" className="text-purple-400" />
+        </button>
+        <span className="text-xs text-gray-400 font-medium">Wallet</span>
+        <div className="flex flex-col text-right min-w-0 ml-2">
+          <div className="text-xs text-white font-medium truncate">
+            {balance ? `${parseFloat(balance.formatted).toFixed(4)} ETH` : '0.0000 ETH'}
           </div>
-        )}
-        
-        {/* Connected Wallet */}
-        <div className="flex items-center space-x-2">
-          <div className="flex flex-col items-center">
-            <button 
-              className="nft-card w-11 h-11 flex items-center justify-center group"
-              onClick={() => setShowConnectors(!showConnectors)}
-              title="Wallet Connected"
-            >
-              <FontAwesomeIcon 
-                icon={faWallet} 
-                size="lg" 
-                className="text-green-400" 
-              />
-            </button>
-            <span className="text-xs text-gray-400 mt-1 font-medium">my wallet</span>
+          <div className="text-xs text-gray-400 truncate">
+            {address?.slice(0, 4)}...{address?.slice(-4)}
           </div>
-          
-          <div className="flex flex-col">
-            <button
-              onClick={() => disconnect()}
-              className="text-xs text-gray-400 hover:text-white transition-colors text-left"
-              title={`Disconnect`}
-            >
-              {address?.slice(0, 6)}...{address?.slice(-4)}
-            </button>
-            <span className="text-xs text-gray-500">
-              {chain?.name || 'Unknown'}
-            </span>
-          </div>
+          <button
+            onClick={() => disconnect()}
+            className="text-xs text-gray-500 hover:text-red-400 transition-colors"
+            title="Disconnect"
+          >
+            disconnect
+          </button>
         </div>
       </div>
     )
@@ -66,16 +61,12 @@ export function WalletConnection() {
       <div className="flex flex-col items-center">
         <button 
           className="nft-card w-11 h-11 flex items-center justify-center group"
-          onClick={() => setShowConnectors(!showConnectors)}
+          onClick={handleWalletClick}
           aria-label="Connect wallet"
         >
-          <FontAwesomeIcon 
-            icon={faPlug} 
-            size="lg" 
-            className="text-gray-400 group-hover:text-white transition-colors" 
-          />
+          <FontAwesomeIcon icon={faPlug} size="lg" className="text-purple-400" />
         </button>
-        <span className="text-xs text-gray-400 mt-1 font-medium">my wallet</span>
+        <span className="text-xs text-gray-400 mt-1 font-medium">Connect</span>
       </div>
       
       {/* Connector Dropdown */}
@@ -110,18 +101,34 @@ export function WalletConnection() {
                 onClick={() => {
                   connect({ connector });
                   setShowConnectors(false);
+                  router.push('/wallet');
                 }}
                 disabled={isPending}
                 className="w-full text-left px-3 py-2 text-sm text-gray-300 hover:text-white hover:bg-white/10 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-3"
               >
                 <div className="w-8 h-8 relative flex-shrink-0">
-                  <Image
-                    src={getWalletLogo(connector.name)}
-                    alt={connector.name}
-                    width={32}
-                    height={32}
-                    className="rounded-md"
-                  />
+                  {connector.name === 'Phantom' ? (
+                    <FontAwesomeIcon icon={faGhost} size="lg" className="text-purple-400" />
+                  ) : connector.name === 'Rainbow' ? (
+                    <span className="inline-block w-8 h-8 bg-gradient-to-tr from-pink-400 via-yellow-300 to-blue-400 rounded-md" />
+                  ) : connector.name === 'Injected' ? (
+                    // For injected wallets, try to detect the specific wallet
+                    <Image
+                      src={getWalletLogo('default')}
+                      alt={connector.name}
+                      width={32}
+                      height={32}
+                      className="rounded-md"
+                    />
+                  ) : (
+                    <Image
+                      src={getWalletLogo(connector.name)}
+                      alt={connector.name}
+                      width={32}
+                      height={32}
+                      className="rounded-md"
+                    />
+                  )}
                 </div>
                 <div className="flex-1 flex items-center justify-between">
                   <span>{connector.name}</span>

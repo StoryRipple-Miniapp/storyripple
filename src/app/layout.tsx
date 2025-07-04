@@ -39,9 +39,9 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${inter.variable} ${spaceGrotesk.variable}`}>
       <body className="font-sans text-white min-h-screen antialiased" style={{ backgroundColor: '#1f1334' }}>
+        <GalaxyBackground />
         <WalletProvider>
           <AppInitializer>
-            <GalaxyBackground />
             <div className="min-h-screen">
               <main className="pb-8">
                 {children}

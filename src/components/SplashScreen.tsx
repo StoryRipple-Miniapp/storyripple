@@ -3,90 +3,76 @@
 import { useEffect, useState } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faBook } from '@fortawesome/free-solid-svg-icons';
+import { GalaxyBackground } from './GalaxyBackground';
 
 interface SplashScreenProps {
   onComplete: () => void;
+  isLoading?: boolean;
 }
 
-export function SplashScreen({ onComplete }: SplashScreenProps) {
-  const [isLoading, setIsLoading] = useState(false);
+export function SplashScreen({ onComplete, isLoading }: SplashScreenProps) {
+  const [progress, setProgress] = useState(0);
 
-  const handleLoadApp = () => {
-    setIsLoading(true);
-    
-    // Give enough time to load properly (2.5 seconds)
-    setTimeout(() => {
-      onComplete();
-    }, 2500);
-  };
+  useEffect(() => {
+    if (isLoading) {
+      let frame: number;
+      const animate = () => {
+        setProgress((prev) => {
+          if (prev < 100) return prev + 2;
+          return 100;
+        });
+        frame = requestAnimationFrame(animate);
+      };
+      animate();
+      return () => cancelAnimationFrame(frame);
+    } else {
+      setProgress(0);
+    }
+  }, [isLoading]);
+
+  useEffect(() => {
+    if (isLoading && progress >= 100) {
+      // Wait for parent to hide splash when feeds is ready
+    }
+  }, [isLoading, progress]);
+
+  // Replace the icon with a moving butterfly SVG
+  const ButterflyIcon = () => (
+    <svg width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" className="animate-bounce">
+      <ellipse cx="32" cy="32" rx="12" ry="24" fill="#a78bfa" opacity="0.7"/>
+      <ellipse cx="32" cy="32" rx="24" ry="12" fill="#f472b6" opacity="0.7"/>
+      <circle cx="32" cy="32" r="6" fill="#fff" />
+      <ellipse cx="22" cy="22" rx="6" ry="12" fill="#a78bfa" opacity="0.5"/>
+      <ellipse cx="42" cy="42" rx="6" ry="12" fill="#f472b6" opacity="0.5"/>
+    </svg>
+  );
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center" style={{ backgroundColor: '#1f1334' }}>
-      {/* Clean 2D Galaxy Background */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        {/* Regular twinkling stars */}
-        <div className="star-2d absolute" style={{ left: '20%', top: '10%', width: '2px', height: '2px', opacity: 0.8 }} />
-        <div className="star-2d absolute" style={{ left: '80%', top: '20%', width: '1px', height: '1px', opacity: 0.6 }} />
-        <div className="star-2d absolute" style={{ left: '30%', top: '30%', width: '2px', height: '2px', opacity: 0.7 }} />
-        <div className="star-2d absolute" style={{ left: '70%', top: '40%', width: '1px', height: '1px', opacity: 0.5 }} />
-        <div className="star-2d absolute" style={{ left: '15%', top: '50%', width: '2px', height: '2px', opacity: 0.9 }} />
-        <div className="star-2d absolute" style={{ left: '85%', top: '60%', width: '1px', height: '1px', opacity: 0.4 }} />
-        <div className="star-2d absolute" style={{ left: '40%', top: '70%', width: '2px', height: '2px', opacity: 0.6 }} />
-        <div className="star-2d absolute" style={{ left: '60%', top: '80%', width: '1px', height: '1px', opacity: 0.8 }} />
-        <div className="star-2d absolute" style={{ left: '10%', top: '90%', width: '2px', height: '2px', opacity: 0.7 }} />
-        <div className="star-2d absolute" style={{ left: '90%', top: '85%', width: '1px', height: '1px', opacity: 0.5 }} />
-        
-        {/* Shooting stars */}
-        <div className="shooting-star absolute" style={{ left: '10%', top: '20%' }} />
-        <div className="shooting-star absolute" style={{ left: '70%', top: '60%', animationDelay: '3s' }} />
-        
-        {/* Subtle background gradients */}
-        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-purple-900/3 to-transparent pointer-events-none" />
-        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-blue-900/2 to-transparent pointer-events-none" />
-      </div>
-
-      {/* Main content */}
-      <div className="relative z-10 text-center space-y-8">
-        {/* Simple Story Book Icon - Wallet Style */}
+      <GalaxyBackground />
+      <div className="relative z-10 text-center">
         <div className="flex flex-col items-center">
-          <div className="nft-card w-20 h-20 flex items-center justify-center group">
-            <FontAwesomeIcon icon={faBook} size="2x" className="text-white" />
+          <div className="w-20 h-20 flex items-center justify-center mb-2">
+            <FontAwesomeIcon icon={faBook} size="2x" className="text-purple-400" />
           </div>
-          <span className="text-sm text-gray-400 mt-3 font-medium">Story Ripple</span>
+          <span className="text-lg text-white font-semibold mb-4">Story Ripple</span>
         </div>
-
-        {/* App Title */}
-        <div>
-          <h1 className="text-2xl font-bold text-white mb-2 font-display">
-            Welcome to StoryRipple
-          </h1>
-          <p className="text-gray-400 text-sm font-medium">
-            Collaborative branching stories
-          </p>
-        </div>
-
-        {/* Loading Button */}
-        <div className="pt-4">
+        <div className="pt-2">
           {!isLoading ? (
             <button
-              onClick={handleLoadApp}
+              onClick={onComplete}
               className="nft-card px-8 py-4 text-white font-medium hover:scale-105 transition-all duration-300"
             >
               Enter the Story Universe
             </button>
           ) : (
-            <div className="nft-card px-8 py-4 text-white font-medium">
-              <div className="flex items-center space-x-3">
-                <div className="flex space-x-1">
-                  {[0, 1, 2].map((i) => (
-                    <div
-                      key={i}
-                      className="w-2 h-2 rounded-full bg-purple-400 animate-bounce"
-                      style={{ animationDelay: `${i * 0.2}s` }}
-                    />
-                  ))}
-                </div>
-                <span>Loading Stories...</span>
+            <div className="flex flex-col items-center">
+              <span className="text-white font-medium mb-2">Loading {progress}%</span>
+              <div className="w-48 h-2 bg-gray-800 rounded-full overflow-hidden">
+                <div
+                  className="h-2 bg-gradient-to-r from-purple-400 to-blue-400 rounded-full transition-all duration-300"
+                  style={{ width: `${progress}%` }}
+                />
               </div>
             </div>
           )}

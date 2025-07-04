@@ -9,42 +9,47 @@ interface AppInitializerProps {
 }
 
 export function AppInitializer({ children }: AppInitializerProps) {
-  const [isLoading, setIsLoading] = useState(true);
+  const [showSplash, setShowSplash] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
   const pathname = usePathname();
+
+  // Only show splash on first load
+  useEffect(() => {
+    if (!showSplash) {
+      setIsLoading(false);
+    }
+  }, [showSplash]);
 
   useEffect(() => {
     // Preload critical pages for faster navigation
     const preloadPages = async () => {
       try {
-        // Preload main navigation pages
         router.prefetch('/feeds');
-        router.prefetch('/leaderboard'); 
         router.prefetch('/create');
         router.prefetch('/profile');
-        router.prefetch('/rules');
         router.prefetch('/wallet');
-
-        // Simulate minimum loading time for smooth UX
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        // Prefetch a sample ripple page
+        router.prefetch('/ripple/1');
       } catch (error) {
         console.log('Preloading completed with some pages skipped');
       }
     };
-
     preloadPages();
   }, [router]);
 
-  const handleLoadingComplete = () => {
-    setIsLoading(false);
-    // Navigate to feeds page if we're on the home page
-    if (pathname === '/') {
-      router.push('/feeds');
-    }
+  const handleSplashComplete = () => {
+    setIsLoading(true);
+    setTimeout(() => {
+      setShowSplash(false);
+      if (pathname !== '/feeds') {
+        router.push('/feeds');
+      }
+    }, 1000);
   };
 
-  if (isLoading) {
-    return <SplashScreen onComplete={handleLoadingComplete} />;
+  if (showSplash) {
+    return <SplashScreen onComplete={handleSplashComplete} isLoading={isLoading} />;
   }
 
   return <>{children}</>;

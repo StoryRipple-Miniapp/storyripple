@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faWallet, faCoins, faSpinner, faRefresh, faArrowUp, faArrowDown } from '@fortawesome/free-solid-svg-icons'
-import { useAccount } from 'wagmi'
+import { useAccount, useBalance } from 'wagmi'
 import { useZoraCoins, CoinBalance } from '@/hooks/useZoraCoins'
 import { formatEther } from 'viem'
 
@@ -13,7 +13,8 @@ interface CoinBalanceProps {
 }
 
 export function CoinBalanceComponent({ className = '', onCoinSelect }: CoinBalanceProps) {
-  const { address, isConnected } = useAccount()
+  const { address, isConnected, chain } = useAccount()
+  const { data: ethBalance } = useBalance({ address })
   const { getUserCoinBalances, getCoinDetails, isLoading } = useZoraCoins()
   const [balances, setBalances] = useState<CoinBalance[]>([])
   const [coinDetails, setCoinDetails] = useState<Record<string, any>>({})
@@ -62,6 +63,19 @@ export function CoinBalanceComponent({ className = '', onCoinSelect }: CoinBalan
     return (balanceNum * priceNum).toFixed(4)
   }
 
+  // Helper to get Zora explorer URL
+  const getExplorerUrl = (coinAddress: string) => {
+    // Use chain?.id from useAccount instead of ethBalance
+    const chainId = chain?.id
+    if (!chainId) return '#'
+    if (chainId === 84532) { // Base Sepolia
+      return `https://testnet.zora.co/coin/bsep:${coinAddress}`
+    } else if (chainId === 8453) { // Base Mainnet
+      return `https://zora.co/coin/base:${coinAddress}`
+    }
+    return '#'
+  }
+
   if (!isConnected) {
     return (
       <div className={`bg-black/30 backdrop-blur-md border border-[#5646a6] rounded-xl p-6 text-center ${className}`}>
@@ -73,6 +87,14 @@ export function CoinBalanceComponent({ className = '', onCoinSelect }: CoinBalan
 
   return (
     <div className={`bg-black/30 backdrop-blur-md border border-[#5646a6] rounded-xl p-6 ${className}`}>
+      {/* ETH Balance */}
+      {isConnected && ethBalance && (
+        <div className="flex items-center justify-between mb-4 p-3 rounded-lg bg-black/40 border border-[#3f3379]">
+          <span className="text-gray-400">ETH Balance</span>
+          <span className="text-white font-semibold">{parseFloat(ethBalance.formatted).toFixed(4)} ETH</span>
+        </div>
+      )}
+
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center space-x-3">
@@ -157,6 +179,17 @@ export function CoinBalanceComponent({ className = '', onCoinSelect }: CoinBalan
                       </>
                     )}
                   </div>
+                </div>
+
+                <div className="flex items-center justify-between mt-2">
+                  <a
+                    href={getExplorerUrl(balance.coinAddress)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-xs text-blue-400 hover:underline ml-2"
+                  >
+                    View on Zora Explorer
+                  </a>
                 </div>
 
                 {/* Quick actions */}
