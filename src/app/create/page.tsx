@@ -5,10 +5,15 @@ import { useState, useEffect } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faPlus, faImage, faPaperPlane, faReply, faCoins, faSpinner } from '@fortawesome/free-solid-svg-icons';
-import { useAccount, useBalance, useSendTransaction } from 'wagmi';
+import { useAccount, useBalance, usePrepareSendTransaction, useSendTransaction } from 'wagmi';
+import { baseSepolia } from 'wagmi/chains';
 import { parseEther } from 'viem';
 import { useZoraCoins } from '@/hooks/useZoraCoins';
 import Image from 'next/image';
+
+// Creation costs in ETH
+const STORY_CREATION_COST = '0.005'  // 0.005 ETH for story
+const RIPPLE_CREATION_COST = '0.002' // 0.002 ETH for ripple
 
 export default function CreatePage() {
   const [storyText, setStoryText] = useState('');
@@ -22,9 +27,17 @@ export default function CreatePage() {
   
   const searchParams = useSearchParams();
   const router = useRouter();
-  const { isConnected, address } = useAccount();
-  const { data: balance } = useBalance({ address });
-  const { sendTransaction } = useSendTransaction();
+  const { address, isConnected } = useAccount();
+  const { data: balance } = useBalance({ 
+    address,
+    chainId: baseSepolia.id
+  });
+  const { config } = usePrepareSendTransaction({
+    to: '0x000000000000000000000000000000000000dEaD',
+    value: parseEther(isRippleMode ? RIPPLE_CREATION_COST : STORY_CREATION_COST),
+    enabled: isConnected && !!address,
+  });
+  const { sendTransaction } = useSendTransaction(config);
   const { createStoryCoin, isLoading } = useZoraCoins();
 
   // Add state to track created stories and pass them to feeds
@@ -32,10 +45,6 @@ export default function CreatePage() {
 
   // Add error state for alert
   const [error, setError] = useState<string | null>(null);
-
-  // Creation costs in ETH
-  const STORY_CREATION_COST = '0.005'  // 0.005 ETH for story
-  const RIPPLE_CREATION_COST = '0.002' // 0.002 ETH for ripple
 
   const categories = ['Fantasy', 'Sci-Fi', 'Mystery', 'Horror', 'Romance', 'Adventure'];
 
@@ -95,12 +104,13 @@ export default function CreatePage() {
     setIsSubmitting(true);
     try {
       // Send ETH as creation fee
-      const platformAddress = '0x000000000000000000000000000000000000dEaD'; // Burn address for demo
-      
-      await sendTransaction({
-        to: platformAddress,
-        value: parseEther(isRippleMode ? RIPPLE_CREATION_COST : STORY_CREATION_COST),
-      });
+      const tx = await sendTransaction?.();
+      if (!tx) {
+        throw new Error('Failed to send transaction');
+      }
+
+      // Wait for transaction confirmation
+      await tx.wait();
 
       let coinData = null;
       
@@ -169,7 +179,7 @@ export default function CreatePage() {
       
     } catch (err) {
       console.error('Failed to create story:', err);
-      alert('Creation failed. Please try again.');
+      setError(err instanceof Error ? err.message : 'Failed to create story. Please try again.');
     } finally {
       setIsSubmitting(false);
     }
@@ -345,7 +355,7 @@ export default function CreatePage() {
         {/* Create Button */}
         <button 
           onClick={handleSubmit}
-          disabled={!storyText.trim() || isSubmitting || isLoading || !hasEnoughBalance()}
+          disabled={!storyText.trim() || isSubmitting || isLoading || !hasEnoughBalance() || !sendTransaction}
           className="w-full bg-[#c0b7d4] hover:bg-[#d4cbe0] text-black px-4 py-3 rounded-full font-display font-medium text-sm transition-all flex items-center justify-center space-x-2 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {(isSubmitting || isLoading) ? (
@@ -359,7 +369,7 @@ export default function CreatePage() {
             <>
               <FontAwesomeIcon icon={isRippleMode ? faReply : faPaperPlane} />
               <span>
-                {isRippleMode ? `Add Ripple (${RIPPLE_CREATION_COST} ETH)` : `Start Story (${STORY_CREATION_COST} ETH)`}
+                {isRippleMode ? `Add Ripple (${RIPPLE_CREATION_COST} ETH)` : `Create Story (${STORY_CREATION_COST} ETH)`}
               </span>
             </>
           )}

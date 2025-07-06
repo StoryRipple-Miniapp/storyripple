@@ -3,17 +3,22 @@
 import { Header } from '@/components/Header';
 import { useState, useEffect } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faLightbulb, faEye, faEyeSlash, faCopy, faSpinner } from '@fortawesome/free-solid-svg-icons';
+import { faLightbulb, faEye, faEyeSlash, faCopy, faSpinner, faCoins, faCircleInfo } from '@fortawesome/free-solid-svg-icons';
 import { useAccount, useConnect, useBalance } from 'wagmi';
 import { useZoraCoins } from '@/hooks/useZoraCoins';
-
+import { TradingWidget } from '@/components/TradingWidget';
+import { baseSepolia } from 'wagmi/chains';
 
 export default function WalletPage() {
   const { address, isConnected } = useAccount();
   const { connect, connectors } = useConnect();
+  
+  // Only fetch Base Sepolia balance
   const { data: balance } = useBalance({
     address: address,
+    chainId: baseSepolia.id,
   });
+
   const { isLoading: zoraLoading, error: zoraError, getUserCoinBalances } = useZoraCoins();
   
   const [termsAccepted, setTermsAccepted] = useState(false);
@@ -22,6 +27,7 @@ export default function WalletPage() {
   const [copySuccess, setCopySuccess] = useState(false);
   const [coinBalances, setCoinBalances] = useState<any[]>([]);
   const [loadingBalances, setLoadingBalances] = useState(false);
+  const [selectedCoin, setSelectedCoin] = useState<string | null>(null);
   
   // Load coin balances when wallet is connected
   useEffect(() => {
@@ -54,141 +60,122 @@ export default function WalletPage() {
     }
   };
 
+  const handleTradeComplete = (txHash: string) => {
+    // Refresh balances after trade
+    if (isConnected && address) {
+      getUserCoinBalances().then((balances) => {
+        setCoinBalances(balances);
+      });
+    }
+  };
+
+  // Get current creation costs for display
+  const STORY_CREATION_COST = '0.005'  // 0.005 ETH for story
+  const RIPPLE_CREATION_COST = '0.002' // 0.002 ETH for ripple
+
   return (
     <div className="min-h-screen font-rounded" style={{ backgroundColor: '#1f1334' }}>
-      {/* Improved galaxy/starfield background */}
-      <div className="pointer-events-none absolute inset-0 overflow-hidden">
-        {/* Large twinkling stars */}
-        {[...Array(15)].map((_, i) => (
-          <span
-            key={`large-${i}`}
-            className="absolute block bg-white rounded-full"
-            style={{
-              width: '2px',
-              height: '2px',
-              top: `${Math.random() * 100}%`,
-              left: `${Math.random() * 100}%`,
-              animation: `twinkle ${Math.random() * 4 + 3}s ease-in-out infinite`,
-              animationDelay: `${Math.random() * 2}s`,
-            }}
-          />
-        ))}
-        
-        {/* Medium floating stars */}
-        {[...Array(25)].map((_, i) => (
-          <span
-            key={`medium-${i}`}
-            className="absolute block bg-white rounded-full"
-            style={{
-              width: '1.5px',
-              height: '1.5px',
-              top: `${Math.random() * 100}%`,
-              left: `${Math.random() * 100}%`,
-              animation: `galaxyFloat ${Math.random() * 6 + 4}s ease-in-out infinite`,
-              animationDelay: `${Math.random() * 3}s`,
-              opacity: Math.random() * 0.6 + 0.2,
-            }}
-          />
-        ))}
-        
-        {/* Small pulsing stars */}
-        {[...Array(40)].map((_, i) => (
-          <span
-            key={`small-${i}`}
-            className="absolute block bg-white rounded-full"
-            style={{
-              width: '1px',
-              height: '1px',
-              top: `${Math.random() * 100}%`,
-              left: `${Math.random() * 100}%`,
-              animation: `starPulse ${Math.random() * 5 + 2}s ease-in-out infinite`,
-              animationDelay: `${Math.random() * 4}s`,
-              opacity: Math.random() * 0.4 + 0.1,
-            }}
-          />
-        ))}
-        
-        {/* Tiny distant stars */}
-        {[...Array(60)].map((_, i) => (
-          <span
-            key={`tiny-${i}`}
-            className="absolute block bg-white rounded-full opacity-30"
-            style={{
-              width: '0.5px',
-              height: '0.5px',
-              top: `${Math.random() * 100}%`,
-              left: `${Math.random() * 100}%`,
-              animation: `twinkle ${Math.random() * 8 + 6}s ease-in-out infinite`,
-              animationDelay: `${Math.random() * 5}s`,
-            }}
-          />
-        ))}
-      </div>
-
       <Header />
       
       <div className="px-4 py-6 space-y-5 relative z-10 max-w-sm mx-auto overflow-y-auto scrollbar-hide pt-24">
-        {/* Top Right Ripples Display */}
-        <div className="flex justify-end">
-          <div className="inline-flex items-center space-x-2 bg-black/30 backdrop-blur-md border border-[#5646a6]/40 rounded-full px-4 py-2 shadow-lg">
-            <span className="text-white font-semibold text-sm">0 RIPPLES</span>
-            {/* Profile image placeholder - will be replaced with actual profile fetch */}
-            <div className="w-6 h-6 bg-gradient-to-br from-purple-400 to-purple-600 rounded-full flex items-center justify-center border border-purple-300/30">
-              <div className="w-4 h-4 bg-gray-300 rounded-full"></div>
+        {/* Wallet Balance Card */}
+        <div className="space-y-2">
+          <div className="flex items-center justify-between">
+            <h3 className="text-white text-sm font-medium font-display">Wallet Balance</h3>
+            <div className="text-xs text-purple-400 flex items-center">
+              <FontAwesomeIcon icon={faCircleInfo} className="mr-1" />
+              Base Sepolia Network
             </div>
           </div>
+          <div className="bg-black/30 backdrop-blur-md border border-[#5646a6] rounded-lg p-6 relative group shadow-lg">
+            <div className="absolute inset-0 bg-gradient-to-r from-[#5646a6]/10 via-[#7c3aed]/20 to-[#5646a6]/10 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+            <div className="absolute inset-0 rounded-lg shadow-[0_0_20px_rgba(86,70,166,0.3)] opacity-60"></div>
+            
+            <div className="text-center relative z-10">
+              <div className="text-3xl font-bold text-white mb-1">
+                {balance ? `${parseFloat(balance.formatted).toFixed(4)} ${balance.symbol}` : '0.000 ETH'}
+              </div>
+              <div className="text-xs text-gray-400 mb-3">
+                {isConnected ? 'Available for creating stories and ripples' : 'Connect wallet to see balance'}
+              </div>
+              
+              {isConnected && (
+                <div className="space-y-2 text-left bg-black/20 rounded-lg p-3 border border-[#5646a6]/30">
+                  <div className="flex justify-between items-center text-sm">
+                    <span className="text-gray-400">Story Creation Cost:</span>
+                    <span className="text-white">{STORY_CREATION_COST} ETH</span>
+                  </div>
+                  <div className="flex justify-between items-center text-sm">
+                    <span className="text-gray-400">Ripple Creation Cost:</span>
+                    <span className="text-white">{RIPPLE_CREATION_COST} ETH</span>
+                  </div>
+                  {parseFloat(balance?.formatted || '0') < parseFloat(STORY_CREATION_COST) && (
+                    <div className="text-orange-400 text-xs mt-2 flex items-center">
+                      <FontAwesomeIcon icon={faCircleInfo} className="mr-1" />
+                      Insufficient balance for story creation
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+          
+          {isConnected && (
+            <button 
+              onClick={handleAddFunds}
+              className="w-full mt-2 bg-gradient-to-r from-purple-500 to-indigo-500 text-white px-4 py-2 rounded-full font-display font-medium text-sm hover:from-purple-600 hover:to-indigo-600 transition-all shadow-lg flex items-center justify-center space-x-2"
+            >
+              <FontAwesomeIcon icon={faCoins} />
+              <span>Get Free Base Sepolia ETH</span>
+            </button>
+          )}
         </div>
 
         {/* Wallet Address Card */}
         <div className="space-y-2">
           <h3 className="text-white text-sm font-medium font-display">Wallet Address</h3>
           <div className="bg-black/30 backdrop-blur-md border border-[#5646a6] rounded-lg p-4 relative group shadow-lg">
-            {/* Enhanced glow effect */}
             <div className="absolute inset-0 bg-gradient-to-r from-[#5646a6]/10 via-[#7c3aed]/20 to-[#5646a6]/10 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
             <div className="absolute inset-0 rounded-lg shadow-[0_0_20px_rgba(86,70,166,0.3)] opacity-60"></div>
             
             <div className="flex items-center justify-between relative z-10">
-              <span className="text-white font-mono text-sm">
-                {showFullAddress ? fullWalletAddress : shortWalletAddress}
-              </span>
-              <div className="flex items-center space-x-2">
+              <div className="flex-1 min-w-0 mr-4">
+                <span className="text-white font-mono text-sm block truncate">
+                  {showFullAddress ? fullWalletAddress : shortWalletAddress}
+                </span>
+              </div>
+              <div className="flex items-center space-x-2 flex-shrink-0">
                 <button 
                   onClick={() => setShowFullAddress(!showFullAddress)}
-                  className="text-[#5646a6] hover:text-white transition-colors p-1"
+                  className="text-[#5646a6] hover:text-white transition-colors p-1 flex items-center space-x-1"
                   title={showFullAddress ? "Hide address" : "Show full address"}
                 >
                   <FontAwesomeIcon icon={showFullAddress ? faEyeSlash : faEye} size="sm" />
+                  <span className="text-xs">{showFullAddress ? "Hide" : "Show"}</span>
                 </button>
                 <button 
                   onClick={handleCopyAddress}
-                  className={`${copySuccess ? 'text-[#c0b7d4]' : 'text-[#5646a6]'} hover:text-white transition-colors p-1`}
+                  className={`${copySuccess ? 'text-[#c0b7d4]' : 'text-[#5646a6]'} hover:text-white transition-colors p-1 flex items-center space-x-1`}
                   title={copySuccess ? "Copied!" : "Copy address"}
                 >
                   <FontAwesomeIcon icon={faCopy} size="sm" />
+                  <span className="text-xs">{copySuccess ? "Copied!" : "Copy"}</span>
                 </button>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Wallet Balance Card */}
-        <div className="space-y-2">
-          <h3 className="text-white text-sm font-medium font-display">Wallet Balance</h3>
-          <div className="bg-black/30 backdrop-blur-md border border-[#5646a6] rounded-lg p-6 relative group shadow-lg">
-            {/* Enhanced glow effect */}
-            <div className="absolute inset-0 bg-gradient-to-r from-[#5646a6]/10 via-[#7c3aed]/20 to-[#5646a6]/10 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-            <div className="absolute inset-0 rounded-lg shadow-[0_0_20px_rgba(86,70,166,0.3)] opacity-60"></div>
-            
-            <div className="text-center relative z-10">
-              <div className="text-3xl font-bold text-white mb-1">
-                {balance ? `${parseFloat(balance.formatted).toFixed(4)} ${balance.symbol}` : '$0.00'}
-              </div>
-              <div className="text-xs text-gray-500">
-                {isConnected ? 'Real wallet balance' : '1 RIPPLE = $1.00'}
-              </div>
-            </div>
-          </div>
-        </div>
+        {/* Connect Wallet Button */}
+        {!isConnected && (
+          <button 
+            onClick={() => connect({ connector: connectors[0] })}
+            className="w-full bg-[#c0b7d4] text-black px-4 py-3 rounded-full font-display font-medium text-sm transition-all flex items-center justify-center space-x-2 hover:bg-[#d4cbe0] shadow-lg"
+          >
+            <FontAwesomeIcon icon={faCoins} />
+            <span>Connect Wallet</span>
+          </button>
+        )}
 
         {/* Story Coin Balances */}
         {isConnected && (
@@ -225,72 +212,6 @@ export default function WalletPage() {
             )}
           </div>
         )}
-
-        {/* Separator Line */}
-        <div className="w-full h-px bg-gradient-to-r from-transparent via-[#5646a6]/50 to-transparent"></div>
-
-        {/* Terms & Conditions */}
-        <div className="space-y-3">
-          <div className="flex items-center space-x-2">
-            <input 
-              type="checkbox" 
-              id="terms" 
-              checked={termsAccepted}
-              onChange={(e) => setTermsAccepted(e.target.checked)}
-              className="w-4 h-4 accent-[#c0b7d4] bg-transparent border-[#5646a6] rounded focus:ring-[#c0b7d4] focus:ring-2"
-            />
-            <label htmlFor="terms" className="text-xs text-gray-400">Terms & Conditions Apply</label>
-          </div>
-          
-          <div className="space-y-1 text-xs text-gray-500 leading-relaxed">
-            <p>
-              Gas Fee of <span className="text-white font-medium">1 RIPPLE</span> will be incurred for every Story Seed
-            </p>
-            <p>
-              Gas Fee of <span className="text-white font-medium">0.50 RIPPLE</span> will be incurred for every Story Ripple
-            </p>
-            <p>
-              Gas Fee of <span className="text-white font-medium">0.25 RIPPLE</span> will be incurred for 1 valid Upvote
-            </p>
-          </div>
-        </div>
-
-        {/* Action Buttons - Now in one line after terms */}
-        <div className="flex space-x-3 pt-2">
-          {!isConnected ? (
-            <button 
-              onClick={() => connect({ connector: connectors[0] })}
-              className="w-full bg-[#c0b7d4] text-black px-4 py-2 rounded-full font-display font-medium text-xs flex items-center justify-center space-x-2 hover:bg-[#d4cbe0] transition-all whitespace-nowrap"
-            >
-              <FontAwesomeIcon icon={faSpinner} />
-              <span>Connect Wallet</span>
-            </button>
-          ) : (
-            <>
-              <button 
-                onClick={() => {
-                  setIsCreatingWallet(true);
-                  setTimeout(() => setIsCreatingWallet(false), 3000);
-                }}
-                className="flex-1 bg-[#c0b7d4] text-black px-4 py-2 rounded-full font-display font-medium text-xs flex items-center justify-center space-x-2 hover:bg-[#d4cbe0] transition-all whitespace-nowrap"
-              >
-                <FontAwesomeIcon 
-                  icon={faSpinner} 
-                  className={`${isCreatingWallet ? 'animate-spin' : ''}`} 
-                  size="sm" 
-                />
-                <span>Wallet Connected</span>
-              </button>
-              
-              <button 
-                onClick={handleAddFunds}
-                className="flex-1 bg-black/20 backdrop-blur-md border border-[#3f3379] text-white px-4 py-2 rounded-full font-display font-medium text-xs hover:bg-black/30 transition-all shadow-lg whitespace-nowrap"
-              >
-                Add funds
-              </button>
-            </>
-          )}
-        </div>
 
         {/* Bottom padding for navigation clearance */}
         <div className="h-4"></div>

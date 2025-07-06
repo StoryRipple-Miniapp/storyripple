@@ -6,6 +6,7 @@ import { faWallet, faCoins, faSpinner, faRefresh, faArrowUp, faArrowDown } from 
 import { useAccount, useBalance } from 'wagmi'
 import { useZoraCoins, CoinBalance } from '@/hooks/useZoraCoins'
 import { formatEther } from 'viem'
+import { baseSepolia } from 'wagmi/chains'
 
 interface CoinBalanceProps {
   className?: string
@@ -14,7 +15,17 @@ interface CoinBalanceProps {
 
 export function CoinBalanceComponent({ className = '', onCoinSelect }: CoinBalanceProps) {
   const { address, isConnected, chain } = useAccount()
-  const { data: ethBalance } = useBalance({ address })
+  const { data: ethBalance } = useBalance({ 
+    address,
+    chainId: baseSepolia.id,
+    query: {
+      refetchInterval: 2_000, // Refetch every 2 seconds
+      staleTime: 2_000, // Consider data stale after 2 seconds
+      refetchOnMount: true,
+      refetchOnReconnect: true,
+      refetchOnWindowFocus: true
+    }
+  })
   const { getUserCoinBalances, getCoinDetails, isLoading } = useZoraCoins()
   const [balances, setBalances] = useState<CoinBalance[]>([])
   const [coinDetails, setCoinDetails] = useState<Record<string, any>>({})
