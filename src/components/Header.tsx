@@ -6,13 +6,17 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faBars, faHouseChimney, faRankingStar, faSquarePlus, faUser, faBookOpenReader, faWallet } from '@fortawesome/free-solid-svg-icons';
 import { WalletConnection } from './WalletConnection';
 import { useAccount, useBalance } from 'wagmi';
+import { baseSepolia } from 'wagmi/chains';
 
 export function Header() {
   const pathname = usePathname();
   const router = useRouter();
   const [showMenu, setShowMenu] = useState(false);
   const { address, isConnected } = useAccount();
-  const { data: balance } = useBalance({ address });
+  const { data: balance } = useBalance({ 
+    address,
+    chainId: baseSepolia.id
+  });
   
   const getPageName = (path: string | null) => {
     if (!path) return 'Story Ripple';

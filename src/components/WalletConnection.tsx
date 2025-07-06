@@ -1,56 +1,103 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useAccount, useConnect, useDisconnect, useBalance } from 'wagmi'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faWallet, faPlug, faExclamationTriangle, faGlobe, faGhost } from '@fortawesome/free-solid-svg-icons'
+import { faWallet, faPlug, faExclamationTriangle, faGlobe, faRightFromBracket, faSpinner } from '@fortawesome/free-solid-svg-icons'
 import { IS_DEMO_MODE } from '@/lib/wagmi'
 import { getWalletLogo } from '@/lib/wallet-logos'
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
-import phantomLogo from '/public/assets/wallets/phantom.svg';
+import { baseSepolia } from 'wagmi/chains'
 
 export function WalletConnection() {
   const { address, isConnected, chain } = useAccount()
-  const { connectors, connect, isPending } = useConnect()
+  const { connectors, connect, isPending, error: connectError } = useConnect()
   const { disconnect } = useDisconnect()
-  const { data: balance } = useBalance({ address })
   const [showConnectors, setShowConnectors] = useState(false)
+  const [error, setError] = useState<string | null>(null)
   const router = useRouter()
+  const { data: balance } = useBalance({ 
+    address,
+    chainId: baseSepolia.id,
+    query: {
+      refetchInterval: 2_000
+    }
+  })
+
+  // Handle connection errors
+  useEffect(() => {
+    if (connectError) {
+      if (connectError.message.includes('Talisman extension has not been configured')) {
+        setError('Please complete Talisman wallet setup first');
+      } else {
+        setError(connectError.message);
+      }
+      // Clear error after 5 seconds
+      const timer = setTimeout(() => setError(null), 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [connectError]);
+
+  // Clear error when closing connector list
+  useEffect(() => {
+    if (!showConnectors) {
+      setError(null);
+    }
+  }, [showConnectors]);
 
   const isTestnet = chain?.testnet || IS_DEMO_MODE
 
-  const handleWalletClick = () => {
-    setShowConnectors(true);
-    router.push('/wallet');
+  const handleDisconnect = () => {
+    disconnect()
+    setShowConnectors(false)
   }
 
   if (isConnected) {
     return (
       <div className="flex items-center space-x-2">
-        {/* Connected Wallet - Mobile Friendly */}
-        <button 
-          className="nft-card w-11 h-11 flex items-center justify-center group"
-          onClick={handleWalletClick}
-          title="Open Wallet"
-        >
-          <FontAwesomeIcon icon={faGhost} size="lg" className="text-purple-400" />
-        </button>
-        <span className="text-xs text-gray-400 font-medium">Wallet</span>
-        <div className="flex flex-col text-right min-w-0 ml-2">
-          <div className="text-xs text-white font-medium truncate">
-            {balance ? `${parseFloat(balance.formatted).toFixed(4)} ETH` : '0.0000 ETH'}
+        {/* Testnet Indicator */}
+        {isTestnet && (
+          <div className="flex items-center space-x-1 px-2 py-1 bg-orange-500/20 border border-orange-500/30 rounded-lg">
+            <FontAwesomeIcon icon={faExclamationTriangle} className="text-orange-400 text-xs" />
+            <span className="text-orange-400 text-xs font-medium">TESTNET</span>
           </div>
-          <div className="text-xs text-gray-400 truncate">
-            {address?.slice(0, 4)}...{address?.slice(-4)}
-          </div>
-          <button
-            onClick={() => disconnect()}
-            className="text-xs text-gray-500 hover:text-red-400 transition-colors"
-            title="Disconnect"
+        )}
+        
+        {/* Connected Wallet */}
+        <div className="flex items-center space-x-2">
+          <button 
+            className="nft-card w-11 h-11 flex items-center justify-center group"
+            onClick={() => setShowConnectors(!showConnectors)}
+            title="Wallet Connected"
           >
-            disconnect
+            <FontAwesomeIcon 
+              icon={faWallet} 
+              size="lg" 
+              className="text-green-400" 
+            />
           </button>
+          
+          <div className="flex flex-col">
+            <div className="text-xs text-gray-400 text-left">
+              {balance && (
+                <span className="text-white font-medium">
+                  {parseFloat(balance.formatted).toFixed(4)} {balance.symbol}
+                </span>
+              )}
+            </div>
+            <button
+              onClick={handleDisconnect}
+              className="text-xs text-gray-400 hover:text-red-400 transition-colors text-left flex items-center space-x-1"
+              title="Disconnect wallet"
+            >
+              <span>{address?.slice(0, 6)}...{address?.slice(-4)}</span>
+              <FontAwesomeIcon icon={faRightFromBracket} className="text-xs" />
+            </button>
+            <span className="text-xs text-gray-500">
+              {chain?.name || 'Unknown'}
+            </span>
+          </div>
         </div>
       </div>
     )
@@ -58,22 +105,35 @@ export function WalletConnection() {
 
   return (
     <div className="relative">
-      <div className="flex flex-col items-center">
-        <button 
-          className="nft-card w-11 h-11 flex items-center justify-center group"
-          onClick={handleWalletClick}
-          aria-label="Connect wallet"
+      {isConnected ? (
+        <button
+          onClick={() => disconnect()}
+          className="flex items-center space-x-2 px-4 py-2 rounded-full bg-black/30 backdrop-blur-md border border-[#5646a6] text-white hover:bg-black/40 transition-all"
         >
-          <FontAwesomeIcon icon={faPlug} size="lg" className="text-purple-400" />
+          <FontAwesomeIcon icon={faWallet} className="text-purple-400" />
+          <span className="font-display text-sm">
+            {address?.slice(0, 6)}...{address?.slice(-4)}
+          </span>
+          {balance && (
+            <span className="text-purple-400 font-display text-sm">
+              {parseFloat(balance.formatted).toFixed(4)} ETH
+            </span>
+          )}
         </button>
-        <span className="text-xs text-gray-400 mt-1 font-medium">Connect</span>
-      </div>
-      
-      {/* Connector Dropdown */}
-      {showConnectors && (
-        <div className="absolute top-12 right-0 bg-black/90 backdrop-blur-md border border-[#5646a6] rounded-xl shadow-lg p-4 min-w-64 z-50">
-          <div className="flex items-center justify-between mb-3">
-            <h3 className="text-white text-sm font-medium">Connect Wallet</h3>
+      ) : (
+        <button
+          onClick={() => setShowConnectors(true)}
+          className="flex items-center space-x-2 px-4 py-2 rounded-full bg-black/30 backdrop-blur-md border border-[#5646a6] text-white hover:bg-black/40 transition-all"
+        >
+          <FontAwesomeIcon icon={faPlug} className="text-purple-400" />
+          <span className="font-display text-sm">Connect Wallet</span>
+        </button>
+      )}
+
+      {showConnectors && !isConnected && (
+        <div className="absolute top-full right-0 mt-2 w-72 bg-black/90 backdrop-blur-xl border border-[#5646a6] rounded-xl p-4 shadow-xl z-50">
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="text-white font-display text-sm">Connect Wallet</h3>
             <button
               onClick={() => setShowConnectors(false)}
               className="text-gray-400 hover:text-white"
@@ -81,78 +141,48 @@ export function WalletConnection() {
               ✕
             </button>
           </div>
-          
-          {IS_DEMO_MODE && (
-            <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-3 mb-4">
-              <div className="flex items-center space-x-2 mb-1">
-                <FontAwesomeIcon icon={faGlobe} className="text-blue-400" />
-                <span className="text-blue-400 font-medium text-sm">Demo Mode</span>
-              </div>
-              <p className="text-blue-300 text-xs">
-                Running on Base Sepolia testnet. Get free testnet ETH to try all features!
-              </p>
+
+          {error && (
+            <div className="mb-4 p-3 bg-red-900/50 border border-red-500/50 rounded-lg">
+              <p className="text-red-400 text-xs">{error}</p>
             </div>
           )}
-          
+
           <div className="space-y-2">
             {connectors.map((connector) => (
               <button
                 key={connector.uid}
                 onClick={() => {
                   connect({ connector });
-                  setShowConnectors(false);
-                  router.push('/wallet');
+                  if (!connectError) setShowConnectors(false);
                 }}
-                disabled={isPending}
-                className="w-full text-left px-3 py-2 text-sm text-gray-300 hover:text-white hover:bg-white/10 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-3"
+                disabled={isPending || !connector.ready}
+                className={`w-full flex items-center justify-between p-3 rounded-lg border ${
+                  connector.ready
+                    ? 'border-[#5646a6] hover:bg-[#5646a6]/20'
+                    : 'border-gray-700 opacity-50 cursor-not-allowed'
+                } transition-all`}
               >
-                <div className="w-8 h-8 relative flex-shrink-0">
-                  {connector.name === 'Phantom' ? (
-                    <FontAwesomeIcon icon={faGhost} size="lg" className="text-purple-400" />
-                  ) : connector.name === 'Rainbow' ? (
-                    <span className="inline-block w-8 h-8 bg-gradient-to-tr from-pink-400 via-yellow-300 to-blue-400 rounded-md" />
-                  ) : connector.name === 'Injected' ? (
-                    // For injected wallets, try to detect the specific wallet
-                    <Image
-                      src={getWalletLogo('default')}
-                      alt={connector.name}
-                      width={32}
-                      height={32}
-                      className="rounded-md"
-                    />
-                  ) : (
-                    <Image
-                      src={getWalletLogo(connector.name)}
-                      alt={connector.name}
-                      width={32}
-                      height={32}
-                      className="rounded-md"
-                    />
-                  )}
-                </div>
-                <div className="flex-1 flex items-center justify-between">
-                  <span>{connector.name}</span>
-                  {isPending && <span className="text-xs text-yellow-400">Connecting...</span>}
-                </div>
+                <span className="text-white text-sm font-display">
+                  {connector.name}
+                </span>
+                {isPending && connector.ready && (
+                  <FontAwesomeIcon
+                    icon={faSpinner}
+                    className="text-purple-400 animate-spin"
+                  />
+                )}
+                {!connector.ready && (
+                  <FontAwesomeIcon
+                    icon={faExclamationTriangle}
+                    className="text-yellow-500"
+                  />
+                )}
               </button>
             ))}
           </div>
-          
-          {IS_DEMO_MODE && (
-            <div className="mt-4 pt-3 border-t border-gray-600">
-              <p className="text-xs text-gray-400 mb-2">Need testnet ETH?</p>
-              <a
-                href="https://faucet.quicknode.com/base/sepolia"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-xs text-blue-400 hover:text-blue-300 underline"
-              >
-                Get Base Sepolia ETH →
-              </a>
-            </div>
-          )}
         </div>
       )}
     </div>
-  )
+  );
 } 
