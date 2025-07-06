@@ -18,7 +18,6 @@ import {
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { useAccount, useBalance, useSendTransaction } from 'wagmi'
-import { baseSepolia } from 'wagmi/chains'
 import { parseEther } from 'viem'
 
 // Refined Alert styling for mobile: smaller font, less padding, softer red, rounded corners, max-w-xs on mobile
@@ -31,17 +30,7 @@ const Alert = ({ message }: { message: string }) => (
 export default function FeedsPage() {
   const router = useRouter();
   const { address, isConnected } = useAccount()
-  const { data: balance } = useBalance({ 
-    address,
-    chainId: baseSepolia.id,
-    query: {
-      refetchInterval: 2_000, // Refetch every 2 seconds
-      staleTime: 2_000, // Consider data stale after 2 seconds
-      refetchOnMount: true,
-      refetchOnReconnect: true,
-      refetchOnWindowFocus: true
-    }
-  })
+  const { data: balance } = useBalance({ address })
   const { sendTransaction } = useSendTransaction()
   
   const [likedPosts, setLikedPosts] = useState<{[key: number]: boolean}>({});
