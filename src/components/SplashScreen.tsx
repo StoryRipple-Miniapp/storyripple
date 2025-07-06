@@ -55,7 +55,8 @@ export function SplashScreen({ onComplete, isLoading }: SplashScreenProps) {
           <div className="w-20 h-20 flex items-center justify-center mb-2">
             <FontAwesomeIcon icon={faBook} size="2x" className="text-purple-400" />
           </div>
-          <span className="text-lg text-white font-semibold mb-4">Story Ripple</span>
+          <h1 className="text-4xl font-bold text-white mt-8 mb-2 font-space-grotesk">STORY RIPPLE</h1>
+          <p className="text-lg text-gray-300 mb-8 font-space-grotesk">Control the narrative of every story</p>
         </div>
         <div className="pt-2">
           {!isLoading ? (
