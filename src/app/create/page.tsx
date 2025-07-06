@@ -6,14 +6,9 @@ import { useSearchParams, useRouter } from 'next/navigation';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faPlus, faImage, faPaperPlane, faReply, faCoins, faSpinner } from '@fortawesome/free-solid-svg-icons';
 import { useAccount, useBalance, usePrepareSendTransaction, useSendTransaction } from 'wagmi';
-import { baseSepolia } from 'wagmi/chains';
 import { parseEther } from 'viem';
 import { useZoraCoins } from '@/hooks/useZoraCoins';
 import Image from 'next/image';
-
-// Creation costs in ETH
-const STORY_CREATION_COST = '0.005'  // 0.005 ETH for story
-const RIPPLE_CREATION_COST = '0.002' // 0.002 ETH for ripple
 
 export default function CreatePage() {
   const [storyText, setStoryText] = useState('');
@@ -27,11 +22,8 @@ export default function CreatePage() {
   
   const searchParams = useSearchParams();
   const router = useRouter();
-  const { address, isConnected } = useAccount();
-  const { data: balance } = useBalance({ 
-    address,
-    chainId: baseSepolia.id
-  });
+  const { isConnected, address } = useAccount();
+  const { data: balance } = useBalance({ address });
   const { config } = usePrepareSendTransaction({
     to: '0x000000000000000000000000000000000000dEaD',
     value: parseEther(isRippleMode ? RIPPLE_CREATION_COST : STORY_CREATION_COST),
@@ -45,6 +37,10 @@ export default function CreatePage() {
 
   // Add error state for alert
   const [error, setError] = useState<string | null>(null);
+
+  // Creation costs in ETH
+  const STORY_CREATION_COST = '0.005'  // 0.005 ETH for story
+  const RIPPLE_CREATION_COST = '0.002' // 0.002 ETH for ripple
 
   const categories = ['Fantasy', 'Sci-Fi', 'Mystery', 'Horror', 'Romance', 'Adventure'];
 

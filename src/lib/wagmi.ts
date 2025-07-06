@@ -19,60 +19,38 @@ const mainnetRpcUrl = DEMO_MODE
 
 // Create connectors with error handling
 const createConnectors = () => {
-  try {
-    const connectors = [
-      miniAppConnector(),
-      metaMask({
-        shimDisconnect: true,
-      }),
-      coinbaseWallet({
-        appName: 'StoryRipple',
-        appLogoUrl: '/assets/icon.png',
-      }),
-    ];
+  const connectors = [
+    miniAppConnector(),
+    injected(), // This will detect Phantom, Rainbow, and other injected wallets
+    metaMask(),
+    coinbaseWallet({
+      appName: 'StoryRipple',
+      appLogoUrl: '/assets/icon.png',
+    }),
+  ];
 
-    // Only add injected connector if it's not Talisman or if Talisman is properly configured
-    const injectedConnector = injected({
-      shimDisconnect: true,
-      filter: (provider) => {
-        // Skip Talisman if not configured
-        if (provider.isTalisman && !provider.isConnected) return false;
-        return true;
-      },
-    });
-    connectors.push(injectedConnector);
-
-    // Only add WalletConnect if we have a valid project ID and not in development hot reload
-    const walletConnectProjectId = process.env.NEXT_PUBLIC_WALLET_CONNECT_PROJECT_ID;
-    if (walletConnectProjectId && walletConnectProjectId !== 'demo-project-id') {
-      try {
-        connectors.push(
-          walletConnect({
-            projectId: walletConnectProjectId,
-            metadata: {
-              name: 'StoryRipple',
-              description: 'Collaborative branching stories',
-              url: typeof window !== 'undefined' ? window.location.origin : 'https://storyripple.com',
-              icons: ['/assets/icon.png']
-            },
-            showQrModal: true,
-          })
-        );
-      } catch (error) {
-        console.warn('WalletConnect initialization skipped:', error);
-      }
+  // Only add WalletConnect if we have a valid project ID and not in development hot reload
+  const walletConnectProjectId = process.env.NEXT_PUBLIC_WALLET_CONNECT_PROJECT_ID;
+  if (walletConnectProjectId && walletConnectProjectId !== 'demo-project-id') {
+    try {
+      connectors.push(
+        walletConnect({
+          projectId: walletConnectProjectId,
+          metadata: {
+            name: 'StoryRipple',
+            description: 'Collaborative branching stories',
+            url: typeof window !== 'undefined' ? window.location.origin : 'https://storyripple.com',
+            icons: ['/assets/icon.png']
+          },
+          showQrModal: true,
+        })
+      );
+    } catch (error) {
+      console.warn('WalletConnect initialization skipped:', error);
     }
-
-    return connectors;
-  } catch (error) {
-    console.error('Error creating connectors:', error);
-    // Return basic connectors if there's an error
-    return [
-      metaMask({
-        shimDisconnect: true,
-      })
-    ];
   }
+
+  return connectors;
 };
 
 // Singleton config to prevent multiple initializations
