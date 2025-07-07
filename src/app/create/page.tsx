@@ -5,10 +5,15 @@ import { useState, useEffect } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faPlus, faImage, faPaperPlane, faReply, faCoins, faSpinner } from '@fortawesome/free-solid-svg-icons';
-import { useAccount, useBalance, usePrepareSendTransaction, useSendTransaction } from 'wagmi';
+import { useAccount, useBalance, useSendTransaction, useWaitForTransactionReceipt } from 'wagmi';
 import { parseEther } from 'viem';
 import { useZoraCoins } from '@/hooks/useZoraCoins';
 import Image from 'next/image';
+import { Toast } from '@/components/Toast';
+
+// Creation costs in ETH
+const STORY_CREATION_COST = '0.005'  // 0.005 ETH for story
+const RIPPLE_CREATION_COST = '0.002' // 0.002 ETH for ripple
 
 export default function CreatePage() {
   const [storyText, setStoryText] = useState('');
@@ -24,23 +29,17 @@ export default function CreatePage() {
   const router = useRouter();
   const { isConnected, address } = useAccount();
   const { data: balance } = useBalance({ address });
-  const { config } = usePrepareSendTransaction({
-    to: '0x000000000000000000000000000000000000dEaD',
-    value: parseEther(isRippleMode ? RIPPLE_CREATION_COST : STORY_CREATION_COST),
-    enabled: isConnected && !!address,
-  });
-  const { sendTransaction } = useSendTransaction(config);
+  const { sendTransaction, data: txData, isPending, isSuccess } = useSendTransaction();
   const { createStoryCoin, isLoading } = useZoraCoins();
+  const [pendingTxHash, setPendingTxHash] = useState<`0x${string}` | undefined>(undefined);
+  const { isLoading: isTxConfirming, isSuccess: isTxConfirmed, isError: isTxError } = useWaitForTransactionReceipt({ hash: pendingTxHash });
 
   // Add state to track created stories and pass them to feeds
   const [createdStories, setCreatedStories] = useState<any[]>([]);
 
   // Add error state for alert
   const [error, setError] = useState<string | null>(null);
-
-  // Creation costs in ETH
-  const STORY_CREATION_COST = '0.005'  // 0.005 ETH for story
-  const RIPPLE_CREATION_COST = '0.002' // 0.002 ETH for ripple
+  const [toast, setToast] = useState<{ message: string; type?: 'success' | 'error' | 'info' } | null>(null);
 
   const categories = ['Fantasy', 'Sci-Fi', 'Mystery', 'Horror', 'Romance', 'Adventure'];
 
@@ -99,84 +98,29 @@ export default function CreatePage() {
 
     setIsSubmitting(true);
     try {
-      // Send ETH as creation fee
-      const tx = await sendTransaction?.();
-      if (!tx) {
-        throw new Error('Failed to send transaction');
+      if (isRippleMode) {
+        // Ripple mode: require ETH transaction
+        const txParams = {
+          to: '0x000000000000000000000000000000000000dEaD' as `0x${string}`,
+          value: parseEther(RIPPLE_CREATION_COST),
+        };
+        const tx = await sendTransaction(txParams);
+        if (!tx || typeof tx.hash !== 'string') throw new Error('Transaction failed');
+        setPendingTxHash(tx.hash as `0x${string}`);
+        return;
+      } else {
+        // Story creation mode
+        const txParams = {
+          to: '0x000000000000000000000000000000000000dEaD' as `0x${string}`,
+          value: parseEther(STORY_CREATION_COST),
+        };
+        const tx = await sendTransaction(txParams);
+        if (!tx || typeof tx.hash !== 'string') throw new Error('Transaction failed');
+        setPendingTxHash(tx.hash as `0x${string}`);
+        return;
       }
-
-      // Wait for transaction confirmation
-      await tx.wait();
-
-      let coinData = null;
-      
-      // Create coin if enabled and not in ripple mode
-      if (createCoin && !isRippleMode && isConnected) {
-        // Generate a unique story ID for the coin
-        const newStoryId = `story-${Date.now()}-${Math.random().toString(36).substring(2, 15)}`;
-        
-        coinData = await createStoryCoin({
-          title: storyText.substring(0, 50), // Use first 50 chars as title
-          author: 'Anonymous', // Could be fetched from Farcaster profile
-          description: storyText,
-          storyId: newStoryId
-        });
-      }
-
-      // Create the story object for feeds
-      const newStory = {
-        id: Date.now(), // Use timestamp as unique ID
-        author: {
-          name: address?.slice(0, 6) + '...' + address?.slice(-4) || 'Anonymous',
-          title: 'Story Creator',
-          avatar: {
-            initials: 'SC',
-            color: 'purple'
-          },
-          verified: false
-        },
-        content: storyText,
-        image: thumbnail || 'https://images.unsplash.com/photo-1465101046530-73398c7f28ca?auto=format&fit=crop&w=800&q=80',
-        timeAgo: 'just now',
-        likes: 0,
-        ripples: 0,
-        poolValue: 0,
-        type: 'user-created',
-        genre: 'User Story',
-        categories: selectedCategories,
-        maxRipples: isRippleMode ? undefined : maxRipples,
-        coinAddress: coinData?.coinAddress,
-        coinSymbol: coinData?.symbol,
-        isRipple: isRippleMode,
-        parentStoryId: storyId
-      };
-
-      console.log('Creating story:', newStory);
-
-      // Store in localStorage for feeds page to access
-      const existingStories = JSON.parse(localStorage.getItem('userCreatedStories') || '[]');
-      const updatedStories = [newStory, ...existingStories];
-      localStorage.setItem('userCreatedStories', JSON.stringify(updatedStories));
-      
-      // Reset form
-      setStoryText('');
-      setSelectedCategories([]);
-      setMaxRipples(30);
-      setThumbnail(null);
-      setCreateCoin(true);
-      
-      // Show success message
-      alert('Story created successfully!');
-      
-      // Redirect to feeds after a short delay
-      setTimeout(() => {
-        router.push('/feeds');
-      }, 1500);
-      
     } catch (err) {
-      console.error('Failed to create story:', err);
-      setError(err instanceof Error ? err.message : 'Failed to create story. Please try again.');
-    } finally {
+      setError(err instanceof Error ? err.message : 'Transaction failed');
       setIsSubmitting(false);
     }
   };
@@ -194,9 +138,91 @@ export default function CreatePage() {
     return currentBalance >= requiredAmount;
   };
 
+  // useEffect to post to feeds after confirmation
+  useEffect(() => {
+    if (isTxConfirmed && pendingTxHash) {
+      const postStoryOrRipple = async () => {
+        let coinData = null;
+        if (createCoin && isConnected) {
+          const newStoryId = isRippleMode
+            ? `ripple-${Date.now()}-${Math.random().toString(36).substring(2, 15)}`
+            : `story-${Date.now()}-${Math.random().toString(36).substring(2, 15)}`;
+          try {
+            coinData = await createStoryCoin({
+              title: storyText.substring(0, 50),
+              author: {
+                name: address?.slice(0, 6) + '...' + address?.slice(-4) || 'Anonymous',
+                title: 'Story Creator',
+                avatar: {
+                  initials: 'SC',
+                  color: 'purple'
+                },
+                verified: false
+              },
+              description: storyText,
+              storyId: newStoryId
+            });
+          } catch (coinErr) {
+            setToast({ message: coinErr instanceof Error ? coinErr.message : 'Failed to create coin', type: 'error' });
+          }
+        }
+        // Create the story object for feeds
+        const newStory = {
+          id: Date.now(),
+          author: {
+            name: address?.slice(0, 6) + '...' + address?.slice(-4) || 'Anonymous',
+            title: 'Story Creator',
+            avatar: {
+              initials: 'SC',
+              color: 'purple'
+            },
+            verified: false
+          },
+          content: storyText,
+          image: thumbnail || 'https://images.unsplash.com/photo-1465101046530-73398c7f28ca?auto=format&fit=crop&w=800&q=80',
+          timeAgo: 'just now',
+          likes: 0,
+          ripples: 0,
+          poolValue: 0,
+          type: 'user-created',
+          genre: 'User Story',
+          categories: selectedCategories,
+          maxRipples: isRippleMode ? undefined : maxRipples,
+          coinAddress: coinData?.coinAddress,
+          coinSymbol: coinData?.symbol,
+          isRipple: isRippleMode,
+          parentStoryId: storyId
+        };
+        // Store in localStorage for feeds page to access
+        const existingStories = JSON.parse(localStorage.getItem('userCreatedStories') || '[]');
+        const updatedStories = [newStory, ...existingStories];
+        localStorage.setItem('userCreatedStories', JSON.stringify(updatedStories));
+        setToast({ message: isRippleMode ? 'Ripple created successfully!' : 'Story created successfully! Redirecting to feeds...', type: 'success' });
+        setIsSubmitting(false);
+        setPendingTxHash(undefined);
+        setTimeout(() => {
+          router.push('/feeds');
+        }, 1500);
+      };
+      postStoryOrRipple();
+    }
+    if (isTxError && pendingTxHash) {
+      setError('Transaction failed or was rejected.');
+      setIsSubmitting(false);
+      setPendingTxHash(undefined);
+    }
+  }, [isTxConfirmed, isTxError, pendingTxHash]);
+
   return (
     <div className="min-h-screen font-rounded page-content" style={{ backgroundColor: '#1f1334' }}>
       <Header />
+      {toast && (
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          onClose={() => setToast(null)}
+        />
+      )}
       
       <div className="px-4 py-6 space-y-5 relative z-10 max-w-sm mx-auto overflow-y-auto scrollbar-hide pt-24">
         {/* Story/Ripple Input Card */}

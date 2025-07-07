@@ -6,6 +6,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faBars, faHouseChimney, faRankingStar, faSquarePlus, faUser, faBookOpenReader, faWallet } from '@fortawesome/free-solid-svg-icons';
 import { WalletConnection } from './WalletConnection';
 import { useAccount, useBalance } from 'wagmi';
+import Image from 'next/image';
 
 export function Header() {
   const pathname = usePathname();

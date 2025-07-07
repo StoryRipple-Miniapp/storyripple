@@ -17,7 +17,7 @@ import {
 } from '@fortawesome/free-solid-svg-icons';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
-import { useAccount, useBalance, useSendTransaction } from 'wagmi'
+import { useAccount, useBalance, useSendTransaction, useWaitForTransactionReceipt } from 'wagmi'
 import { parseEther } from 'viem'
 
 // Refined Alert styling for mobile: smaller font, less padding, softer red, rounded corners, max-w-xs on mobile
@@ -32,6 +32,8 @@ export default function FeedsPage() {
   const { address, isConnected } = useAccount()
   const { data: balance } = useBalance({ address })
   const { sendTransaction } = useSendTransaction()
+  const [pendingVoteTx, setPendingVoteTx] = useState<{ hash: `0x${string}` | undefined, postId: number | null }>({ hash: undefined, postId: null });
+  const { isLoading: isVoteConfirming, isSuccess: isVoteConfirmed, isError: isVoteError } = useWaitForTransactionReceipt({ hash: pendingVoteTx.hash });
   
   const [likedPosts, setLikedPosts] = useState<{[key: number]: boolean}>({});
   const [bookmarkedPosts, setBookmarkedPosts] = useState<{[key: number]: boolean}>({});
@@ -63,6 +65,17 @@ export default function FeedsPage() {
     };
 
     loadUserStories();
+
+    // Listen for page visibility changes to reload stories
+    const handleVisibility = () => {
+      if (document.visibilityState === 'visible') {
+        loadUserStories();
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisibility);
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibility);
+    };
   }, []);
 
   // Generate avatar function
@@ -184,10 +197,31 @@ export default function FeedsPage() {
   // Combine feed posts with user created stories
   const allPosts = [...userCreatedStories, ...feedPosts];
 
+  // useEffect to update poolValue after vote confirmation
+  useEffect(() => {
+    if (isVoteConfirmed && pendingVoteTx.hash && pendingVoteTx.postId !== null) {
+      setLikedPosts(prev => ({ ...prev, [pendingVoteTx.postId!]: !prev[pendingVoteTx.postId!] }));
+      setUserCreatedStories(prevStories => prevStories.map(post => post.id === pendingVoteTx.postId ? { ...post, poolValue: (post.poolValue || 0) + parseFloat(VOTING_COST), likes: (post.likes || 0) + 1 } : post));
+      const postIndex = feedPosts.findIndex(post => post.id === pendingVoteTx.postId);
+      if (postIndex !== -1) {
+        feedPosts[postIndex].poolValue += parseFloat(VOTING_COST);
+        feedPosts[postIndex].likes += 1;
+      }
+      setError({ message: 'Vote successful!', details: `${VOTING_COST} ETH added to story prize pool.`, context: '' });
+      setVotingInProgress({});
+      setPendingVoteTx({ hash: undefined, postId: null });
+    }
+    if (isVoteError && pendingVoteTx.hash) {
+      setError({ message: 'Voting transaction failed or was rejected.', context: '' });
+      setVotingInProgress({});
+      setPendingVoteTx({ hash: undefined, postId: null });
+    }
+  }, [isVoteConfirmed, isVoteError, pendingVoteTx]);
+
   const handleUpvote = async (postId: number) => {
     if (!isConnected || !address) {
       setError({ message: 'Please connect your wallet to vote', context: postId.toString() });
-      return
+      return;
     }
 
     // Check if user has enough balance
@@ -223,8 +257,7 @@ export default function FeedsPage() {
     setVotingInProgress(prev => ({ ...prev, [postId]: true }));
     
     try {
-      // Send ETH as voting fee to a liquidity pool address
-      const liquidityPoolAddress = '0x742d35Cc6634C0532925a3b8D7389CAd5A234D8f' // Replace with your liquidity pool address
+      const liquidityPoolAddress = '0x742d35Cc6634C0532925a3b8D7389CAd5A234D8f';
       
       console.log('Sending transaction to:', liquidityPoolAddress)
       console.log('Amount:', VOTING_COST, 'ETH')
@@ -232,21 +265,11 @@ export default function FeedsPage() {
       const tx = await sendTransaction({
         to: liquidityPoolAddress,
         value: parseEther(VOTING_COST),
-      })
-      
-      console.log('Vote transaction sent:', tx)
-      
-      // Update UI after successful transaction
-      setLikedPosts(prev => ({ ...prev, [postId]: !prev[postId] }));
-      
-      // Update the feed post pool value
-      const postIndex = feedPosts.findIndex(post => post.id === postId)
-      if (postIndex !== -1) {
-        feedPosts[postIndex].poolValue += parseFloat(VOTING_COST)
-        feedPosts[postIndex].likes += likedPosts[postId] ? -1 : 1
-      }
-      
-      setError({ message: 'Vote successful!', details: `${VOTING_COST} ETH added to story prize pool.\n\nTransaction: ${tx}`, context: postId.toString() });
+      });
+      if (!tx || typeof tx.hash !== 'string') throw new Error('Transaction failed');
+      setPendingVoteTx({ hash: tx.hash as `0x${string}`, postId });
+      // Wait for confirmation before updating UI
+      return;
       
     } catch (error) {
       console.error('❌ Voting failed:', error)
@@ -424,7 +447,7 @@ export default function FeedsPage() {
                     {/* Upvote icon in square with rounded border, icon green */}
                     <button 
                       onClick={() => handleUpvote(post.id)}
-                      disabled={votingInProgress[post.id]}
+                      disabled={votingInProgress[post.id] || isVoteConfirming}
                       className="flex items-center space-x-2 bg-transparent p-0 border-none shadow-none"
                     >
                       <span className="w-6 h-6 flex items-center justify-center rounded-md border border-green-400 bg-black/40">

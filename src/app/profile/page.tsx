@@ -61,7 +61,7 @@ interface RankingUser {
 export default function ProfilePage() {
   // State Management
   const [activeTab, setActiveTab] = useState<'rankings' | 'achievements'>('rankings');
-  const [userStats] = useState({
+  const [userStats, setUserStats] = useState({
     storiesCreated: 0,
     ripplesCreated: 0,
     upvotesReceived: 0,
@@ -299,6 +299,27 @@ export default function ProfilePage() {
       }, 5000);
     }
   }, [userStats]);
+
+  useEffect(() => {
+    const updateProfileStats = () => {
+      // Load stories, ripples, and votes from localStorage
+      const stories = JSON.parse(localStorage.getItem('userCreatedStories') || '[]');
+      const ripples = Object.keys(localStorage)
+        .filter(key => key.startsWith('userCreatedRipples_'))
+        .reduce((acc, key) => acc + JSON.parse(localStorage.getItem(key) || '[]').length, 0);
+      // For votes, you may need to track them in localStorage if not already
+      // Example: const votes = JSON.parse(localStorage.getItem('userVotes') || '[]');
+      setUserStats((prev: any) => ({
+        ...prev,
+        storiesCreated: stories.length,
+        ripplesCreated: ripples,
+        // upvotesReceived: votes.length, // Uncomment if you track votes
+      }));
+    };
+    updateProfileStats();
+    window.addEventListener('storage', updateProfileStats);
+    return () => window.removeEventListener('storage', updateProfileStats);
+  }, []);
 
   // ============================================================================
   // EVENT HANDLERS

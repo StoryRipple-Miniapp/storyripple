@@ -1,6 +1,7 @@
 /* Import CSS dependencies first */
 @import "tailwindcss";
 @import url('https://fonts.googleapis.com/css2?family=Bad+Script&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&display=swap');
 
 :root {
   --background: #0d0d12;
@@ -272,6 +273,10 @@ body {
   
   .font-rounded {
     font-family: 'SF Pro Rounded', 'SF Rounded', 'ui-rounded', var(--font-inter), system-ui, sans-serif;
+  }
+  
+  .font-space-grotesk {
+    font-family: 'Space Grotesk', sans-serif;
   }
   
   /* Text gradients */

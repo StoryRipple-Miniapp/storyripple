@@ -1,37 +1,88 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useAccount, useConnect, useDisconnect, useBalance } from 'wagmi'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faWallet, faPlug, faExclamationTriangle, faGlobe, faRightFromBracket } from '@fortawesome/free-solid-svg-icons'
+import { faWallet, faPlug, faExclamationTriangle, faGlobe, faRightFromBracket, faSpinner, faDollarSign } from '@fortawesome/free-solid-svg-icons'
 import { IS_DEMO_MODE } from '@/lib/wagmi'
 import { getWalletLogo } from '@/lib/wallet-logos'
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
+import { baseSepolia } from 'wagmi/chains'
 
 export function WalletConnection() {
   const { address, isConnected, chain } = useAccount()
   const { connectors, connect, isPending } = useConnect()
   const { disconnect } = useDisconnect()
   const [showConnectors, setShowConnectors] = useState(false)
+  const [ethPrice, setEthPrice] = useState<number | null>(null)
   const router = useRouter()
-  const { data: balance } = useBalance({ address })
+  
+  // Fetch balance with proper error handling
+  const { data: balance, isLoading: balanceLoading, error: balanceError } = useBalance({ 
+    address,
+    chainId: baseSepolia.id,
+    query: {
+      enabled: isConnected && !!address,
+      refetchInterval: 10000, // Refetch every 10 seconds
+      retry: 3,
+    }
+  })
 
   const isTestnet = chain?.testnet || IS_DEMO_MODE
+  const isOnCorrectNetwork = chain?.id === baseSepolia.id
+
+  // Fetch ETH price from CoinGecko
+  const fetchEthPrice = async () => {
+    try {
+      const response = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=ethereum&vs_currencies=usd')
+      const data = await response.json()
+      setEthPrice(data.ethereum.usd)
+    } catch (error) {
+      console.error('Failed to fetch ETH price:', error)
+      setEthPrice(null)
+    }
+  }
+
+  // Fetch ETH price on component mount and every 5 minutes
+  useEffect(() => {
+    fetchEthPrice()
+    const interval = setInterval(fetchEthPrice, 300000) // Update every 5 minutes
+    return () => clearInterval(interval)
+  }, [])
 
   const handleDisconnect = () => {
     disconnect()
     setShowConnectors(false)
   }
 
+  const formatBalance = () => {
+    if (balanceLoading) return 'Loading...';
+    if (balanceError) return 'Error';
+    if (!isConnected) return '0.000 ETH';
+    if (!isOnCorrectNetwork) return 'Wrong Network';
+    if (balance) return `${parseFloat(balance.formatted).toFixed(4)} ${balance.symbol}`;
+    return '0.000 ETH';
+  }
+
+  const formatUsdValue = () => {
+    if (!balance || !ethPrice || balanceLoading || balanceError || !isConnected || !isOnCorrectNetwork) {
+      return null;
+    }
+    
+    const ethAmount = parseFloat(balance.formatted);
+    const usdValue = ethAmount * ethPrice;
+    return usdValue.toFixed(2);
+  }
+
   if (isConnected) {
     return (
       <div className="flex items-center space-x-2">
-        {/* Testnet Indicator */}
-        {isTestnet && (
-          <div className="flex items-center space-x-1 px-2 py-1 bg-orange-500/20 border border-orange-500/30 rounded-lg">
-            <FontAwesomeIcon icon={faExclamationTriangle} className="text-orange-400 text-xs" />
-            <span className="text-orange-400 text-xs font-medium">TESTNET</span>
+        {/* Wrong Network Indicator */}
+        {!isOnCorrectNetwork && (
+          <div className="flex items-center space-x-1 px-2 py-1 bg-red-500/20 border border-red-500/30 rounded-lg">
+            <FontAwesomeIcon icon={faExclamationTriangle} className="text-red-400 text-xs" />
+            <span className="text-red-400 text-xs font-medium">WRONG NETWORK</span>
           </div>
         )}
         
@@ -45,18 +96,23 @@ export function WalletConnection() {
             <FontAwesomeIcon 
               icon={faWallet} 
               size="lg" 
-              className="text-green-400" 
+              className={isOnCorrectNetwork ? "text-green-400" : "text-red-400"} 
             />
           </button>
           
           <div className="flex flex-col">
             <div className="text-xs text-gray-400 text-left">
-              {balance && (
-                <span className="text-white font-medium">
-                  {parseFloat(balance.formatted).toFixed(4)} {balance.symbol}
-                </span>
-              )}
+              <span className={`font-medium ${isOnCorrectNetwork ? 'text-white' : 'text-red-400'}`}>
+                {formatBalance()}
+              </span>
             </div>
+            {/* USD Value Display */}
+            {formatUsdValue() && (
+              <div className="text-xs text-green-400 text-left flex items-center space-x-1">
+                <FontAwesomeIcon icon={faDollarSign} className="text-xs" />
+                <span>${formatUsdValue()}</span>
+              </div>
+            )}
             <button
               onClick={handleDisconnect}
               className="text-xs text-gray-400 hover:text-red-400 transition-colors text-left flex items-center space-x-1"
@@ -65,7 +121,7 @@ export function WalletConnection() {
               <span>{address?.slice(0, 6)}...{address?.slice(-4)}</span>
               <FontAwesomeIcon icon={faRightFromBracket} className="text-xs" />
             </button>
-            <span className="text-xs text-gray-500">
+            <span className={`text-xs ${isOnCorrectNetwork ? 'text-gray-500' : 'text-red-400'}`}>
               {chain?.name || 'Unknown'}
             </span>
           </div>
@@ -136,7 +192,12 @@ export function WalletConnection() {
                 </div>
                 <div className="flex-1 flex items-center justify-between">
                   <span>{connector.name}</span>
-                  {isPending && <span className="text-xs text-yellow-400">Connecting...</span>}
+                  {isPending && (
+                    <div className="flex items-center space-x-1">
+                      <FontAwesomeIcon icon={faSpinner} className="animate-spin text-xs" />
+                      <span className="text-xs text-yellow-400">Connecting...</span>
+                    </div>
+                  )}
                 </div>
               </button>
             ))}
