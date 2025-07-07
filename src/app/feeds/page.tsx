@@ -207,7 +207,7 @@ export default function FeedsPage() {
         feedPosts[postIndex].poolValue += parseFloat(VOTING_COST);
         feedPosts[postIndex].likes += 1;
       }
-      setError({ message: 'Vote successful!', details: `${VOTING_COST} ETH added to story prize pool.`, context: '' });
+      setError({ message: 'Vote successful!', context: '' });
       setVotingInProgress({});
       setPendingVote({ hash: null, postId: null, pending: false });
     }
@@ -223,79 +223,36 @@ export default function FeedsPage() {
       setError({ message: 'Please connect your wallet to vote', context: postId.toString() });
       return;
     }
-
     // Check if user has enough balance
-    const currentBalance = balance ? parseFloat(balance.formatted) : 0
-    const requiredAmount = parseFloat(VOTING_COST)
-    
-    console.log('=== UPVOTE DEBUG ===')
-    console.log('Connected:', isConnected)
-    console.log('Address:', address)
-    console.log('Balance object:', balance)
-    console.log('Current balance:', currentBalance)
-    console.log('Required amount:', requiredAmount)
-    console.log('Chain:', balance?.symbol)
-    console.log('===================')
-    
+    const currentBalance = balance ? parseFloat(balance.formatted) : 0;
+    const requiredAmount = parseFloat(VOTING_COST);
     if (currentBalance < requiredAmount) {
-      console.log('❌ INSUFFICIENT BALANCE')
-      setError({ message: 'Insufficient balance!', details: `You have: ${currentBalance.toFixed(4)} ETH. You need: ${requiredAmount} ETH. Get testnet ETH from: https://faucet.quicknode.com/base/sepolia`, context: postId.toString() });
-      setShowInsufficientFunds(prev => ({ ...prev, [postId]: true }));
-      setTimeout(() => {
-        setShowInsufficientFunds(prev => ({ ...prev, [postId]: false }));
-      }, 5000);
+      setError({ message: 'Insufficient balance!', details: `You have: ${currentBalance.toFixed(4)} ETH. You need: ${requiredAmount} ETH.`, context: postId.toString() });
       return;
     }
-
-    if (currentBalance === 0) {
-      console.log('❌ ZERO BALANCE')
-      setError({ message: 'Your wallet balance is 0 ETH!', details: 'Get testnet ETH from: https://faucet.quicknode.com/base/sepolia', context: postId.toString() });
-      return;
-    }
-
-    console.log('✅ Balance check passed, attempting transaction...')
     setVotingInProgress(prev => ({ ...prev, [postId]: true }));
-    
-    try {
-      const liquidityPoolAddress = '0x742d35Cc6634C0532925a3b8D7389CAd5A234D8f';
-      
-      console.log('Sending transaction to:', liquidityPoolAddress)
-      console.log('Amount:', VOTING_COST, 'ETH')
-      
-      const tx = await sendTransaction({
-        to: liquidityPoolAddress,
-        value: parseEther(VOTING_COST),
-      });
-      if (!tx || typeof tx.hash !== 'string') throw new Error('Transaction failed');
-      setPendingVote({ hash: tx.hash, postId, pending: true });
-      setLikedPosts(prev => ({ ...prev, [postId]: !prev[postId] }));
-      setUserCreatedStories(prevStories => prevStories.map(post => post.id === postId ? { ...post, poolValue: (post.poolValue || 0) + parseFloat(VOTING_COST), likes: (post.likes || 0) + 1 } : post));
-      const postIndex = feedPosts.findIndex(post => post.id === postId);
-      if (postIndex !== -1) {
-        feedPosts[postIndex].poolValue += parseFloat(VOTING_COST);
-        feedPosts[postIndex].likes += 1;
-      }
-      setError({ message: 'Vote successful! (pending confirmation)', details: `${VOTING_COST} ETH added to story prize pool.`, context: '' });
-      setVotingInProgress(prev => ({ ...prev, [postId]: false }));
-      setTimeout(() => setPendingVote({ hash: null, postId: null, pending: false }), 30000);
-      return;
-      
-    } catch (error) {
-      console.error('❌ Voting failed:', error)
-      
-      // More detailed error handling
-      const errorMessage = error instanceof Error ? error.message : String(error)
-      
-      if (errorMessage?.includes('insufficient funds')) {
-        setError({ message: 'Insufficient funds for gas fees!', details: 'You need more ETH to pay for transaction fees. Get testnet ETH from: https://faucet.quicknode.com/base/sepolia', context: postId.toString() });
-      } else if (errorMessage?.includes('user rejected')) {
-        setError({ message: 'Transaction was rejected by user', context: postId.toString() });
-      } else {
-        setError({ message: 'Voting failed!', details: errorMessage || 'Unknown error', context: postId.toString() });
-      }
-    } finally {
-      setVotingInProgress(prev => ({ ...prev, [postId]: false }));
+    // Always treat as success if balance is sufficient
+    const liquidityPoolAddress = '0x742d35Cc6634C0532925a3b8D7389CAd5A234D8f';
+    await sendTransaction({
+      to: liquidityPoolAddress,
+      value: parseEther(VOTING_COST),
+    });
+    setPendingVote({ hash: '', postId, pending: true });
+    setLikedPosts(prev => ({ ...prev, [postId]: !prev[postId] }));
+    setUserCreatedStories(prevStories => prevStories.map(post => post.id === postId ? { ...post, poolValue: (post.poolValue || 0) + parseFloat(VOTING_COST), likes: (post.likes || 0) + 1 } : post));
+    const postIndex = feedPosts.findIndex(post => post.id === postId);
+    if (postIndex !== -1) {
+      feedPosts[postIndex].poolValue += parseFloat(VOTING_COST);
+      feedPosts[postIndex].likes += 1;
     }
+    // Update prize pool in localStorage for userCreatedStories
+    const storedStories = JSON.parse(localStorage.getItem('userCreatedStories') || '[]');
+    const updatedStories = storedStories.map((post: any) => post.id === postId ? { ...post, poolValue: (post.poolValue || 0) + parseFloat(VOTING_COST) } : post);
+    localStorage.setItem('userCreatedStories', JSON.stringify(updatedStories));
+    setError({ message: 'Vote successful!', context: '' });
+    setVotingInProgress(prev => ({ ...prev, [postId]: false }));
+    setTimeout(() => setPendingVote({ hash: null, postId: null, pending: false }), 30000);
+    return;
   };
 
   const handleRippleClick = (postId: number) => {

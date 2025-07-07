@@ -7,6 +7,10 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faArrowUp, faEdit, faWarning, faBookOpen } from '@fortawesome/free-solid-svg-icons';
 import Image from 'next/image';
 import { GalaxyBackground } from '@/components/GalaxyBackground';
+import { useAccount, useBalance, useSendTransaction } from 'wagmi';
+import { parseEther } from 'viem';
+import { useZoraCoins } from '@/hooks/useZoraCoins';
+import { useRouter } from 'next/navigation';
 
 interface Ripple {
   id: number;
@@ -86,6 +90,16 @@ export default function StoryRipplePage() {
   // Add state to track created ripples
   const [userCreatedRipples, setUserCreatedRipples] = useState<Ripple[]>([]);
 
+  const { address, isConnected } = useAccount();
+  const { data: balance } = useBalance({ address });
+  const { sendTransaction } = useSendTransaction();
+  const { createStoryCoin } = useZoraCoins();
+  const router = useRouter();
+  const [pendingTx, setPendingTx] = useState<{ hash: string | null, pending: boolean }>({ hash: null, pending: false });
+  const [toast, setToast] = useState<{ message: string; type?: 'success' | 'error' | 'info' } | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const RIPPLE_CREATION_COST = '0.002';
+
   // Load user created ripples from localStorage
   useEffect(() => {
     const loadUserRipples = () => {
@@ -118,11 +132,38 @@ export default function StoryRipplePage() {
     ));
   };
 
-  const handleCreateRipple = () => {
+  const handleCreateRipple = async () => {
     if (!newRipple.trim()) return;
-    
+    if (!isConnected || !address) {
+      setToast({ message: 'Please connect your wallet to create a ripple', type: 'error' });
+      return;
+    }
+    const currentBalance = balance ? parseFloat(balance.formatted) : 0;
+    const requiredAmount = parseFloat(RIPPLE_CREATION_COST);
+    if (currentBalance < requiredAmount) {
+      setToast({ message: 'Insufficient balance to create a ripple', type: 'error' });
+      return;
+    }
+    setIsSubmitting(true);
+    let coinData = null;
+    try {
+      const newRippleId = `ripple-${Date.now()}-${Math.random().toString(36).substring(2, 15)}`;
+      coinData = await createStoryCoin({
+        title: newRipple.substring(0, 50),
+        author: {
+          name: address?.slice(0, 6) + '...' + address?.slice(-4) || 'Anonymous',
+          title: 'Ripple Creator',
+          avatar: 'https://picsum.photos/seed/you/40/40',
+          verified: false
+        },
+        description: newRipple,
+        storyId: newRippleId
+      });
+    } catch (coinErr) {
+      setToast({ message: coinErr instanceof Error ? coinErr.message : 'Failed to create coin', type: 'error' });
+    }
     const newRippleObj: Ripple = {
-      id: Date.now(), // Use timestamp as unique ID
+      id: Date.now(),
       author: 'You',
       username: '@You',
       avatar: 'https://picsum.photos/seed/you/40/40',
@@ -131,16 +172,22 @@ export default function StoryRipplePage() {
       hasUpvoted: false,
       isExpanded: false
     };
-    
-    // Add to user created ripples
+    const txParams = {
+      to: '0x000000000000000000000000000000000000dEaD' as `0x${string}`,
+      value: parseEther(RIPPLE_CREATION_COST),
+    };
+    await sendTransaction(txParams);
+    setPendingTx({ hash: '', pending: true });
+    // Add to user created ripples immediately
     const updatedUserRipples = [newRippleObj, ...userCreatedRipples];
     setUserCreatedRipples(updatedUserRipples);
-    
-    // Store in localStorage
     localStorage.setItem(`userCreatedRipples_${storyId}`, JSON.stringify(updatedUserRipples));
-    
+    setToast({ message: 'Ripple created! (pending confirmation)', type: 'success' });
+    setIsSubmitting(false);
     setNewRipple('');
     setRippleCount(rippleCount - 1);
+    setTimeout(() => router.push('/feeds'), 1500);
+    setTimeout(() => setPendingTx({ hash: null, pending: false }), 30000);
   };
 
   // Alert styling for error messages
@@ -195,10 +242,10 @@ export default function StoryRipplePage() {
             <span className="text-xs text-gray-400">{newRipple.length}/500 characters</span>
             <button
               onClick={handleCreateRipple}
-              disabled={!newRipple.trim()}
+              disabled={!newRipple.trim() || isSubmitting}
               className="btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              Publish Ripple
+              {isSubmitting ? 'Publishing...' : 'Publish Ripple'}
             </button>
           </div>
         </div>
