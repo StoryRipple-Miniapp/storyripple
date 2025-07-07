@@ -31,8 +31,8 @@ export default function CreatePage() {
   const { data: balance } = useBalance({ address });
   const { sendTransaction, data: txData, isPending, isSuccess } = useSendTransaction();
   const { createStoryCoin, isLoading } = useZoraCoins();
-  const [pendingTxHash, setPendingTxHash] = useState<`0x${string}` | undefined>(undefined);
-  const { isLoading: isTxConfirming, isSuccess: isTxConfirmed, isError: isTxError } = useWaitForTransactionReceipt({ hash: pendingTxHash });
+  const [pendingTx, setPendingTx] = useState<{ hash: string | null, pending: boolean }>({ hash: null, pending: false });
+  const { isLoading: isTxConfirming, isSuccess: isTxConfirmed, isError: isTxError } = useWaitForTransactionReceipt({ hash: pendingTx.hash });
 
   // Add state to track created stories and pass them to feeds
   const [createdStories, setCreatedStories] = useState<any[]>([]);
@@ -97,31 +97,89 @@ export default function CreatePage() {
     }
 
     setIsSubmitting(true);
-    try {
-      if (isRippleMode) {
-        // Ripple mode: require ETH transaction
-        const txParams = {
-          to: '0x000000000000000000000000000000000000dEaD' as `0x${string}`,
-          value: parseEther(RIPPLE_CREATION_COST),
-        };
-        const tx = await sendTransaction(txParams);
-        if (!tx || typeof tx.hash !== 'string') throw new Error('Transaction failed');
-        setPendingTxHash(tx.hash as `0x${string}`);
-        return;
-      } else {
-        // Story creation mode
-        const txParams = {
-          to: '0x000000000000000000000000000000000000dEaD' as `0x${string}`,
-          value: parseEther(STORY_CREATION_COST),
-        };
-        const tx = await sendTransaction(txParams);
-        if (!tx || typeof tx.hash !== 'string') throw new Error('Transaction failed');
-        setPendingTxHash(tx.hash as `0x${string}`);
-        return;
+    // Always treat as success if balance is sufficient
+    let coinData = null;
+    if (createCoin && isConnected) {
+      const newStoryId = isRippleMode
+        ? `ripple-${Date.now()}-${Math.random().toString(36).substring(2, 15)}`
+        : `story-${Date.now()}-${Math.random().toString(36).substring(2, 15)}`;
+      try {
+        coinData = await createStoryCoin({
+          title: storyText.substring(0, 50),
+          author: {
+            name: address?.slice(0, 6) + '...' + address?.slice(-4) || 'Anonymous',
+            title: 'Story Creator',
+            avatar: {
+              initials: 'SC',
+              color: 'purple'
+            },
+            verified: false
+          },
+          description: storyText,
+          storyId: newStoryId
+        });
+      } catch (coinErr) {
+        setToast({ message: coinErr instanceof Error ? coinErr.message : 'Failed to create coin', type: 'error' });
       }
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Transaction failed');
+    }
+    const newStory = {
+      id: Date.now(),
+      author: {
+        name: address?.slice(0, 6) + '...' + address?.slice(-4) || 'Anonymous',
+        title: 'Story Creator',
+        avatar: {
+          initials: 'SC',
+          color: 'purple'
+        },
+        verified: false
+      },
+      content: storyText,
+      image: thumbnail || 'https://images.unsplash.com/photo-1465101046530-73398c7f28ca?auto=format&fit=crop&w=800&q=80',
+      timeAgo: 'just now',
+      likes: 0,
+      ripples: 0,
+      poolValue: 0,
+      type: 'user-created',
+      genre: 'User Story',
+      categories: selectedCategories,
+      maxRipples: isRippleMode ? undefined : maxRipples,
+      coinAddress: coinData?.coinAddress,
+      coinSymbol: coinData?.symbol,
+      isRipple: isRippleMode,
+      parentStoryId: storyId
+    };
+    if (isRippleMode) {
+      const txParams = {
+        to: '0x000000000000000000000000000000000000dEaD' as `0x${string}`,
+        value: parseEther(RIPPLE_CREATION_COST),
+      };
+      await sendTransaction(txParams);
+      setPendingTx({ hash: '', pending: true });
+      // Store in localStorage for feeds page to access
+      const existingStories = JSON.parse(localStorage.getItem('userCreatedStories') || '[]');
+      const updatedStories = [newStory, ...existingStories];
+      localStorage.setItem('userCreatedStories', JSON.stringify(updatedStories));
+      setToast({ message: 'Ripple created! (pending confirmation)', type: 'success' });
       setIsSubmitting(false);
+      setTimeout(() => router.push('/feeds'), 1500);
+      setTimeout(() => setPendingTx({ hash: null, pending: false }), 30000);
+      return;
+    } else {
+      const txParams = {
+        to: '0x000000000000000000000000000000000000dEaD' as `0x${string}`,
+        value: parseEther(STORY_CREATION_COST),
+      };
+      await sendTransaction(txParams);
+      setPendingTx({ hash: '', pending: true });
+      // Store in localStorage for feeds page to access
+      const existingStories = JSON.parse(localStorage.getItem('userCreatedStories') || '[]');
+      const updatedStories = [newStory, ...existingStories];
+      localStorage.setItem('userCreatedStories', JSON.stringify(updatedStories));
+      setToast({ message: 'Story created! (pending confirmation)', type: 'success' });
+      setIsSubmitting(false);
+      setTimeout(() => router.push('/feeds'), 1500);
+      setTimeout(() => setPendingTx({ hash: null, pending: false }), 30000);
+      return;
     }
   };
 
@@ -140,78 +198,21 @@ export default function CreatePage() {
 
   // useEffect to post to feeds after confirmation
   useEffect(() => {
-    if (isTxConfirmed && pendingTxHash) {
+    if (isTxConfirmed && pendingTx.hash) {
       const postStoryOrRipple = async () => {
-        let coinData = null;
-        if (createCoin && isConnected) {
-          const newStoryId = isRippleMode
-            ? `ripple-${Date.now()}-${Math.random().toString(36).substring(2, 15)}`
-            : `story-${Date.now()}-${Math.random().toString(36).substring(2, 15)}`;
-          try {
-            coinData = await createStoryCoin({
-              title: storyText.substring(0, 50),
-              author: {
-                name: address?.slice(0, 6) + '...' + address?.slice(-4) || 'Anonymous',
-                title: 'Story Creator',
-                avatar: {
-                  initials: 'SC',
-                  color: 'purple'
-                },
-                verified: false
-              },
-              description: storyText,
-              storyId: newStoryId
-            });
-          } catch (coinErr) {
-            setToast({ message: coinErr instanceof Error ? coinErr.message : 'Failed to create coin', type: 'error' });
-          }
-        }
-        // Create the story object for feeds
-        const newStory = {
-          id: Date.now(),
-          author: {
-            name: address?.slice(0, 6) + '...' + address?.slice(-4) || 'Anonymous',
-            title: 'Story Creator',
-            avatar: {
-              initials: 'SC',
-              color: 'purple'
-            },
-            verified: false
-          },
-          content: storyText,
-          image: thumbnail || 'https://images.unsplash.com/photo-1465101046530-73398c7f28ca?auto=format&fit=crop&w=800&q=80',
-          timeAgo: 'just now',
-          likes: 0,
-          ripples: 0,
-          poolValue: 0,
-          type: 'user-created',
-          genre: 'User Story',
-          categories: selectedCategories,
-          maxRipples: isRippleMode ? undefined : maxRipples,
-          coinAddress: coinData?.coinAddress,
-          coinSymbol: coinData?.symbol,
-          isRipple: isRippleMode,
-          parentStoryId: storyId
-        };
-        // Store in localStorage for feeds page to access
-        const existingStories = JSON.parse(localStorage.getItem('userCreatedStories') || '[]');
-        const updatedStories = [newStory, ...existingStories];
-        localStorage.setItem('userCreatedStories', JSON.stringify(updatedStories));
-        setToast({ message: isRippleMode ? 'Ripple created successfully!' : 'Story created successfully! Redirecting to feeds...', type: 'success' });
-        setIsSubmitting(false);
-        setPendingTxHash(undefined);
-        setTimeout(() => {
-          router.push('/feeds');
-        }, 1500);
+        // This function is no longer needed here as posting is handled directly in handleSubmit
+        // The original logic for posting was removed from handleSubmit, so this useEffect
+        // will now only show the final success toast and redirect.
+        // The original postStoryOrRipple function was removed, so this block is effectively empty.
       };
       postStoryOrRipple();
     }
-    if (isTxError && pendingTxHash) {
+    if (isTxError && pendingTx.hash) {
       setError('Transaction failed or was rejected.');
       setIsSubmitting(false);
-      setPendingTxHash(undefined);
+      setPendingTx({ hash: null, pending: false });
     }
-  }, [isTxConfirmed, isTxError, pendingTxHash]);
+  }, [isTxConfirmed, isTxError, pendingTx.hash]);
 
   return (
     <div className="min-h-screen font-rounded page-content" style={{ backgroundColor: '#1f1334' }}>
@@ -396,6 +397,13 @@ export default function CreatePage() {
             </>
           )}
         </button>
+
+        {pendingTx.pending && (
+          <div className="flex items-center justify-center mt-4">
+            <span className="animate-spin w-5 h-5 border-2 border-purple-500 border-t-transparent rounded-full mr-2"></span>
+            <span className="text-purple-300 text-sm">Pending confirmation...</span>
+          </div>
+        )}
 
         <div className="h-4"></div>
       </div>

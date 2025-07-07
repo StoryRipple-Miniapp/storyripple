@@ -32,8 +32,8 @@ export default function FeedsPage() {
   const { address, isConnected } = useAccount()
   const { data: balance } = useBalance({ address })
   const { sendTransaction } = useSendTransaction()
-  const [pendingVoteTx, setPendingVoteTx] = useState<{ hash: `0x${string}` | undefined, postId: number | null }>({ hash: undefined, postId: null });
-  const { isLoading: isVoteConfirming, isSuccess: isVoteConfirmed, isError: isVoteError } = useWaitForTransactionReceipt({ hash: pendingVoteTx.hash });
+  const [pendingVote, setPendingVote] = useState<{ hash: string | null, postId: number | null, pending: boolean }>({ hash: null, postId: null, pending: false });
+  const { isLoading: isVoteConfirming, isSuccess: isVoteConfirmed, isError: isVoteError } = useWaitForTransactionReceipt({ hash: pendingVote.hash });
   
   const [likedPosts, setLikedPosts] = useState<{[key: number]: boolean}>({});
   const [bookmarkedPosts, setBookmarkedPosts] = useState<{[key: number]: boolean}>({});
@@ -199,24 +199,24 @@ export default function FeedsPage() {
 
   // useEffect to update poolValue after vote confirmation
   useEffect(() => {
-    if (isVoteConfirmed && pendingVoteTx.hash && pendingVoteTx.postId !== null) {
-      setLikedPosts(prev => ({ ...prev, [pendingVoteTx.postId!]: !prev[pendingVoteTx.postId!] }));
-      setUserCreatedStories(prevStories => prevStories.map(post => post.id === pendingVoteTx.postId ? { ...post, poolValue: (post.poolValue || 0) + parseFloat(VOTING_COST), likes: (post.likes || 0) + 1 } : post));
-      const postIndex = feedPosts.findIndex(post => post.id === pendingVoteTx.postId);
+    if (isVoteConfirmed && pendingVote.hash && pendingVote.postId !== null) {
+      setLikedPosts(prev => ({ ...prev, [pendingVote.postId!]: !prev[pendingVote.postId!] }));
+      setUserCreatedStories(prevStories => prevStories.map(post => post.id === pendingVote.postId ? { ...post, poolValue: (post.poolValue || 0) + parseFloat(VOTING_COST), likes: (post.likes || 0) + 1 } : post));
+      const postIndex = feedPosts.findIndex(post => post.id === pendingVote.postId);
       if (postIndex !== -1) {
         feedPosts[postIndex].poolValue += parseFloat(VOTING_COST);
         feedPosts[postIndex].likes += 1;
       }
       setError({ message: 'Vote successful!', details: `${VOTING_COST} ETH added to story prize pool.`, context: '' });
       setVotingInProgress({});
-      setPendingVoteTx({ hash: undefined, postId: null });
+      setPendingVote({ hash: null, postId: null, pending: false });
     }
-    if (isVoteError && pendingVoteTx.hash) {
+    if (isVoteError && pendingVote.hash) {
       setError({ message: 'Voting transaction failed or was rejected.', context: '' });
       setVotingInProgress({});
-      setPendingVoteTx({ hash: undefined, postId: null });
+      setPendingVote({ hash: null, postId: null, pending: false });
     }
-  }, [isVoteConfirmed, isVoteError, pendingVoteTx]);
+  }, [isVoteConfirmed, isVoteError, pendingVote]);
 
   const handleUpvote = async (postId: number) => {
     if (!isConnected || !address) {
@@ -267,8 +267,17 @@ export default function FeedsPage() {
         value: parseEther(VOTING_COST),
       });
       if (!tx || typeof tx.hash !== 'string') throw new Error('Transaction failed');
-      setPendingVoteTx({ hash: tx.hash as `0x${string}`, postId });
-      // Wait for confirmation before updating UI
+      setPendingVote({ hash: tx.hash, postId, pending: true });
+      setLikedPosts(prev => ({ ...prev, [postId]: !prev[postId] }));
+      setUserCreatedStories(prevStories => prevStories.map(post => post.id === postId ? { ...post, poolValue: (post.poolValue || 0) + parseFloat(VOTING_COST), likes: (post.likes || 0) + 1 } : post));
+      const postIndex = feedPosts.findIndex(post => post.id === postId);
+      if (postIndex !== -1) {
+        feedPosts[postIndex].poolValue += parseFloat(VOTING_COST);
+        feedPosts[postIndex].likes += 1;
+      }
+      setError({ message: 'Vote successful! (pending confirmation)', details: `${VOTING_COST} ETH added to story prize pool.`, context: '' });
+      setVotingInProgress(prev => ({ ...prev, [postId]: false }));
+      setTimeout(() => setPendingVote({ hash: null, postId: null, pending: false }), 30000);
       return;
       
     } catch (error) {
@@ -498,6 +507,12 @@ export default function FeedsPage() {
                   <p className="text-sm text-red-400">
                     {getInsufficientFundsText()}
                   </p>
+                </div>
+              )}
+              {pendingVote.pending && pendingVote.postId === post.id && (
+                <div className="flex items-center mt-2">
+                  <span className="animate-spin w-4 h-4 border-2 border-purple-500 border-t-transparent rounded-full mr-2"></span>
+                  <span className="text-purple-300 text-xs">Vote pending confirmation...</span>
                 </div>
               )}
             </article>
